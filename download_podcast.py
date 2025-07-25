@@ -1,6 +1,7 @@
 import feedparser
 import requests
 import os
+import whisper
 
 def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts"):
     """
@@ -57,19 +58,43 @@ def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts")
     
     file_path = os.path.join(download_directory, f"{filename}{file_extension}")
 
-    print(f"Downloading '{episode_title}' to '{file_path}'...")
-    try:
-        response = requests.get(episode_url, stream=True)
-        response.raise_for_status()  # Raise an exception for HTTP errors
+    if os.path.exists(file_path):
+        print(f"File already exists: {file_path}. Skipping download.")
+    else:
+        print(f"Downloading '{episode_title}' to '{file_path}'...")
+        try:
+            response = requests.get(episode_url, stream=True)
+            response.raise_for_status()  # Raise an exception for HTTP errors
 
-        with open(file_path, 'wb') as f:
-            for chunk in response.iter_content(chunk_size=8192):
-                f.write(chunk)
-        print(f"Successfully downloaded: {file_path}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error downloading episode: {e}")
+            with open(file_path, 'wb') as f:
+                for chunk in response.iter_content(chunk_size=8192):
+                    f.write(chunk)
+            print(f"Successfully downloaded: {file_path}")
+
+        except requests.exceptions.RequestException as e:
+            print(f"Error downloading episode: {e}")
+
+    transcribe_podcast_episode(file_path)
+    return file_path
+
+def transcribe_podcast_episode(audio_file_path):
+    print(f"Transcribing {audio_file_path}...")
+    print("--- Before whisper.load_model ---")
+    try:
+        model = whisper.load_model("medium", device="cuda")
+        print("--- After whisper.load_model ---")
+        print("Whisper model loaded. Starting transcription...")
+        print("--- Before model.transcribe ---")
+        result = model.transcribe(audio_file_path)
+        print("--- After model.transcribe ---")
+        print("Transcription complete.")
+        transcription_file_path = os.path.splitext(audio_file_path)[0] + ".txt"
+        with open(transcription_file_path, "w", encoding="utf-8") as f:
+            f.write(result["text"])
+        print(f"Transcription saved to {transcription_file_path}")
+    except Exception as e:
+        print(f"An error occurred during transcription: {e}")
 
 if __name__ == "__main__":
-    # Example usage with the BBC podcast feed
     npr_rss_feed = "https://www.npr.org/rss/podcast.php?id=510019"
     download_latest_podcast_episode(npr_rss_feed)
