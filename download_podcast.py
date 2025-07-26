@@ -2,6 +2,7 @@ import feedparser
 import requests
 import os
 import whisper
+from summarize_podcast import summarize_text
 
 def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts"):
     """
@@ -92,6 +93,7 @@ def transcribe_podcast_episode(audio_file_path):
         with open(transcription_file_path, "w", encoding="utf-8") as f:
             f.write(result["text"])
         print(f"Transcription saved to {transcription_file_path}")
+        summarize_text(transcription_file_path)
     except Exception as e:
         print(f"An error occurred during transcription: {e}")
 

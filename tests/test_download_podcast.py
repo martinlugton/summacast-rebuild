@@ -194,8 +194,11 @@ class TestDownloadPodcast(unittest.TestCase):
 
         # Verify transcription file was opened and written to
         expected_transcription_filepath = "/path/to/mock_audio.txt"
-        mock_open.assert_called_once_with(expected_transcription_filepath, "w", encoding="utf-8")
-        mock_open().write.assert_called_once_with(mock_transcription_text)
+        expected_summary_filepath = "/path/to/mock_audio.summary.txt"
+        mock_open.assert_any_call(expected_transcription_filepath, "w", encoding="utf-8")
+        mock_open.assert_any_call(expected_transcription_filepath, "r", encoding="utf-8") # For summarization
+        mock_open.assert_any_call(expected_summary_filepath, "w", encoding="utf-8") # For summarization
+        mock_open().write.assert_any_call(mock_transcription_text)
 
     @patch('download_podcast.whisper.load_model', side_effect=Exception("Whisper error"))
     @patch('builtins.open', new_callable=mock_open)
