@@ -33,3 +33,10 @@ Build a product that transcribes and summarises podcasts.
 6. Implement error handling and logging.
 7. Add configuration for podcast sources.
 8. Explore persistent storage for summaries.
+9. Develop a simple web interface: Create a basic web UI (e.g., using Flask or FastAPI with a simple templating engine) to:
+    * Display a list of configured podcasts.
+    * Show a list of processed episodes and their summaries.
+    * Allow users to add/remove podcast RSS feeds.
+10. Implement a scheduler for the workflow: Instead of an infinite `while True` loop, use a proper scheduling mechanism (e.g., APScheduler) to run the `main_workflow.py` periodically.
+11. Refine summary output: Allow for configurable summary lengths (e.g., short, medium, long) or different output formats (e.g., bullet points, paragraphs).
+12. Add user authentication (optional, for future): If the UI becomes more complex or multi-user, consider adding authentication.
