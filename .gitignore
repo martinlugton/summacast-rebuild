@@ -10,3 +10,6 @@ venv/
 
 # Ignore Gemini interaction summaries
 gemini-interaction-summaries/
+
+# Ignore environment variables
+.env
