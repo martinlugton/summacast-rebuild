@@ -16,3 +16,4 @@ gemini-interaction-summaries/
 
 # Ignore processed episodes tracker
 processed_episodes.json
+podcast_config.json
