@@ -29,3 +29,7 @@ Build a product that transcribes and summarises podcasts.
 2. Install the whisper transcription tool, and start transcribing podcast episodes.
 3. Start summarising the content of the podcasts and writing them to a file locally.
 4. Identify an email sending service that allows us to send via API, with a free tier for low usage volumes, or with a cheap paid offering (e.g. Amazon SES).
+5. Create a unified workflow script that runs continuously, checking for and processing new podcast episodes (download, transcribe, summarize, email).
+6. Implement error handling and logging.
+7. Add configuration for podcast sources.
+8. Explore persistent storage for summaries.

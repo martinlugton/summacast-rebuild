@@ -59,6 +59,7 @@ def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts")
     
     file_path = os.path.join(download_directory, f"{filename}{file_extension}")
 
+    is_new_download = False
     if os.path.exists(file_path):
         print(f"File already exists: {file_path}. Skipping download.")
     else:
@@ -71,32 +72,15 @@ def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts")
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
             print(f"Successfully downloaded: {file_path}")
+            is_new_download = True
 
         except requests.exceptions.RequestException as e:
             print(f"Error downloading episode: {e}")
+            return None # Indicate failure to download
 
-    transcribe_podcast_episode(file_path)
-    return file_path
-
-def transcribe_podcast_episode(audio_file_path):
-    print(f"Transcribing {audio_file_path}...")
-    print("--- Before whisper.load_model ---")
-    try:
-        model = whisper.load_model("medium", device="cuda")
-        print("--- After whisper.load_model ---")
-        print("Whisper model loaded. Starting transcription...")
-        print("--- Before model.transcribe ---")
-        result = model.transcribe(audio_file_path)
-        print("--- After model.transcribe ---")
-        print("Transcription complete.")
-        transcription_file_path = os.path.splitext(audio_file_path)[0] + ".txt"
-        with open(transcription_file_path, "w", encoding="utf-8") as f:
-            f.write(result["text"])
-        print(f"Transcription saved to {transcription_file_path}")
-        summarize_text(transcription_file_path)
-    except Exception as e:
-        print(f"An error occurred during transcription: {e}")
-
-if __name__ == "__main__":
-    npr_rss_feed = "https://www.npr.org/rss/podcast.php?id=510019"
-    download_latest_podcast_episode(npr_rss_feed)
+    return {
+        "episode_title": episode_title,
+        "episode_url": episode_url,
+        "file_path": file_path,
+        "is_new_download": is_new_download
+    }

@@ -13,3 +13,6 @@ gemini-interaction-summaries/
 
 # Ignore environment variables
 .env
+
+# Ignore processed episodes tracker
+processed_episodes.json

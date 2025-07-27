@@ -6,7 +6,8 @@ import sys
 # Add the parent directory to the sys.path to allow importing download_podcast
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from download_podcast import download_latest_podcast_episode, transcribe_podcast_episode
+from download_podcast import download_latest_podcast_episode
+from transcribe_podcast import transcribe_audio
 
 class TestDownloadPodcast(unittest.TestCase):
 
@@ -14,8 +15,7 @@ class TestDownloadPodcast(unittest.TestCase):
     @patch('download_podcast.requests.get')
     @patch('download_podcast.os.path.exists')
     @patch('download_podcast.os.makedirs')
-    @patch('download_podcast.transcribe_podcast_episode') # Mock the transcription function
-    def test_download_latest_podcast_episode_success(self, mock_transcribe_podcast_episode, mock_makedirs, mock_exists, mock_requests_get, mock_feedparser_parse):
+    def test_download_latest_podcast_episode_success(self, mock_makedirs, mock_exists, mock_requests_get, mock_feedparser_parse):
         # Mock feedparser.parse to return a sample feed
         mock_entry = MagicMock()
         mock_entry.title = 'Test Episode: The Best One!'
@@ -37,7 +37,7 @@ class TestDownloadPodcast(unittest.TestCase):
         # Mock open for writing the file
         with patch('builtins.open', mock_open()) as mocked_file:
             expected_filepath = os.path.join("test_podcasts", "Test Episode The Best One.mp3")
-            download_latest_podcast_episode("http://example.com/rss_feed.xml", "test_podcasts")
+            result = download_latest_podcast_episode("http://example.com/rss_feed.xml", "test_podcasts")
 
             # Assertions for download
             mock_feedparser_parse.assert_called_once_with("http://example.com/rss_feed.xml")
@@ -55,33 +55,35 @@ class TestDownloadPodcast(unittest.TestCase):
             mocked_file().write.assert_any_call(b'audio_data_chunk_2')
             self.assertEqual(mocked_file().write.call_count, 2)
 
-            # Assert that transcribe_podcast_episode was called
-            mock_transcribe_podcast_episode.assert_called_once_with(expected_filepath)
+            # Assert the return value
+            self.assertIsNotNone(result)
+            self.assertEqual(result["episode_title"], "Test Episode: The Best One!")
+            self.assertEqual(result["episode_url"], "http://example.com/audio/test_episode.mp3?param=123")
+            self.assertEqual(result["file_path"], expected_filepath)
+            self.assertTrue(result["is_new_download"])
 
     @patch('download_podcast.feedparser.parse')
     @patch('download_podcast.requests.get')
     @patch('download_podcast.os.path.exists')
     @patch('download_podcast.os.makedirs')
-    @patch('download_podcast.transcribe_podcast_episode')
-    def test_download_latest_podcast_episode_no_episodes(self, mock_transcribe_podcast_episode, mock_makedirs, mock_exists, mock_requests_get, mock_feedparser_parse):
+    def test_download_latest_podcast_episode_no_episodes(self, mock_makedirs, mock_exists, mock_requests_get, mock_feedparser_parse):
         # Mock feedparser.parse to return an empty feed
         mock_feedparser_parse.return_value.entries = []
 
-        download_latest_podcast_episode("http://example.com/empty_feed.xml", "test_podcasts")
+        result = download_latest_podcast_episode("http://example.com/empty_feed.xml", "test_podcasts")
 
         # Assertions
         mock_feedparser_parse.assert_called_once_with("http://example.com/empty_feed.xml")
         mock_requests_get.assert_not_called()
         mock_exists.assert_not_called() # No directory operations if no episodes
         mock_makedirs.assert_not_called()
-        mock_transcribe_podcast_episode.assert_not_called() # Should not transcribe if no episode
+        self.assertIsNone(result)
 
     @patch('download_podcast.feedparser.parse')
     @patch('download_podcast.requests.get')
     @patch('download_podcast.os.path.exists')
     @patch('download_podcast.os.makedirs')
-    @patch('download_podcast.transcribe_podcast_episode')
-    def test_download_latest_podcast_episode_no_audio_enclosure(self, mock_transcribe_podcast_episode, mock_makedirs, mock_exists, mock_requests_get, mock_feedparser_parse):
+    def test_download_latest_podcast_episode_no_audio_enclosure(self, mock_makedirs, mock_exists, mock_requests_get, mock_feedparser_parse):
         # Mock feedparser.parse to return an episode without an audio enclosure
         mock_entry = MagicMock()
         mock_entry.title = 'Episode without audio'
@@ -92,17 +94,16 @@ class TestDownloadPodcast(unittest.TestCase):
         mock_entry.links = [mock_link]
         mock_feedparser_parse.return_value.entries = [mock_entry]
 
-        download_latest_podcast_episode("http://example.com/no_audio_feed.xml", "test_podcasts")
+        result = download_latest_podcast_episode("http://example.com/no_audio_feed.xml", "test_podcasts")
 
         # Assertions
         mock_feedparser_parse.assert_called_once_with("http://example.com/no_audio_feed.xml")
         mock_requests_get.assert_not_called()
         mock_exists.assert_not_called()
         mock_makedirs.assert_not_called()
-        mock_transcribe_podcast_episode.assert_not_called() # Should not transcribe if no audio
+        self.assertIsNone(result)
 
-    @patch('download_podcast.transcribe_podcast_episode') # Mock the transcription function
-    def test_download_latest_podcast_episode_file_exists(self, mock_transcribe_podcast_episode):
+    def test_download_latest_podcast_episode_file_exists(self):
         # This test specifically checks the behavior when the file already exists
         with patch('download_podcast.feedparser.parse') as mock_feedparser_parse, \
              patch('download_podcast.requests.get') as mock_requests_get, \
@@ -122,7 +123,7 @@ class TestDownloadPodcast(unittest.TestCase):
             mock_entry.links = [mock_link]
             mock_feedparser_parse.return_value.entries = [mock_entry]
 
-            download_latest_podcast_episode("http://example.com/existing_feed.xml", "test_podcasts")
+            result = download_latest_podcast_episode("http://example.com/existing_feed.xml", "test_podcasts")
 
             # Assertions
             expected_filepath = os.path.join("test_podcasts", "Existing Episode.mp3")
@@ -133,7 +134,13 @@ class TestDownloadPodcast(unittest.TestCase):
             mock_requests_get.assert_not_called() # Should not download if file exists
             mock_makedirs.assert_not_called()
             mocked_file.assert_not_called()
-            mock_transcribe_podcast_episode.assert_called_once_with(expected_filepath)
+
+            # Assert the return value
+            self.assertIsNotNone(result)
+            self.assertEqual(result["episode_title"], "Existing Episode")
+            self.assertEqual(result["episode_url"], "http://example.com/audio/existing_episode.mp3")
+            self.assertEqual(result["file_path"], expected_filepath)
+            self.assertFalse(result["is_new_download"])
 
     def test_filename_sanitization(self):
         # This test directly calls the function with a mocked environment to isolate filename sanitization
@@ -144,8 +151,7 @@ class TestDownloadPodcast(unittest.TestCase):
              patch('download_podcast.requests.get') as mock_requests_get, \
              patch('download_podcast.os.path.exists', return_value=True) as mock_exists, \
              patch('download_podcast.os.makedirs') as mock_makedirs, \
-             patch('builtins.open', mock_open()) as mocked_file, \
-             patch('download_podcast.transcribe_podcast_episode') as mock_transcribe_podcast_episode: # Mock transcription
+             patch('builtins.open', mock_open()) as mocked_file:
 
             mock_entry = MagicMock()
             mock_entry.title = 'Episode with invalid chars: < > " / \\ | ? *'
@@ -171,49 +177,6 @@ class TestDownloadPodcast(unittest.TestCase):
             # The second argument to os.path.join is the filename
             self.assertIn(expected_filename_part, mock_join.call_args[0][1])
             self.assertTrue(mock_join.call_args[0][1].endswith(expected_extension))
-
-    @patch('download_podcast.whisper.load_model')
-    @patch('builtins.open', new_callable=mock_open)
-    @patch('download_podcast.os.path.splitext')
-    @patch('download_podcast.os.path.exists', return_value=True) # Assume audio file exists for transcription test
-    def test_transcribe_podcast_episode_success(self, mock_exists, mock_splitext, mock_open, mock_load_model):
-        mock_audio_path = "/path/to/mock_audio.mp3"
-        mock_transcription_text = "This is a test transcription."
-        mock_splitext.return_value = ("/path/to/mock_audio", ".mp3")
-
-        # Mock the Whisper model and its transcribe method
-        mock_model = MagicMock()
-        mock_model.transcribe.return_value = {"text": mock_transcription_text}
-        mock_load_model.return_value = mock_model
-
-        transcribe_podcast_episode(mock_audio_path)
-
-        # Assertions
-        mock_load_model.assert_called_once_with("medium", device="cuda")
-        mock_model.transcribe.assert_called_once_with(mock_audio_path)
-
-        # Verify transcription file was opened and written to
-        expected_transcription_filepath = "/path/to/mock_audio.txt"
-        expected_summary_filepath = "/path/to/mock_audio.summary.txt"
-        mock_open.assert_any_call(expected_transcription_filepath, "w", encoding="utf-8")
-        mock_open.assert_any_call(expected_transcription_filepath, "r", encoding="utf-8") # For summarization
-        mock_open.assert_any_call(expected_summary_filepath, "w", encoding="utf-8") # For summarization
-        mock_open().write.assert_any_call(mock_transcription_text)
-
-    @patch('download_podcast.whisper.load_model', side_effect=Exception("Whisper error"))
-    @patch('builtins.open', new_callable=mock_open)
-    @patch('download_podcast.os.path.splitext')
-    @patch('download_podcast.os.path.exists', return_value=True)
-    def test_transcribe_podcast_episode_error_handling(self, mock_exists, mock_splitext, mock_open, mock_load_model):
-        mock_audio_path = "/path/to/mock_audio.mp3"
-        mock_splitext.return_value = ("/path/to/mock_audio", ".mp3")
-
-        # Capture print output to check error message
-        with patch('builtins.print') as mock_print:
-            transcribe_podcast_episode(mock_audio_path)
-            mock_print.assert_any_call(f"An error occurred during transcription: Whisper error")
-
-        mock_open.assert_not_called() # No file should be written on error
 
 if __name__ == '__main__':
     unittest.main()
