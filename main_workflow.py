@@ -6,12 +6,12 @@ from download_podcast import download_latest_podcast_episode
 from transcribe_podcast import transcribe_audio
 from summarize_podcast import summarize_text
 from send_email import send_email
+import database_manager
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 PODCAST_CONFIG_FILE = "podcast_config.json"
-PROCESSED_EPISODES_FILE = "processed_episodes.json"
 
 def load_podcast_config():
     if os.path.exists(PODCAST_CONFIG_FILE):
@@ -25,24 +25,8 @@ def load_podcast_config():
         logging.error(f"Podcast configuration file not found: {PODCAST_CONFIG_FILE}")
         return None
 
-def load_processed_episodes():
-    if os.path.exists(PROCESSED_EPISODES_FILE):
-        try:
-            with open(PROCESSED_EPISODES_FILE, 'r') as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            logging.warning(f"Could not decode {PROCESSED_EPISODES_FILE}. Starting with empty tracker.")
-            return {}
-    return {}
-
-def save_processed_episodes(episodes_tracker):
-    try:
-        with open(PROCESSED_EPISODES_FILE, 'w') as f:
-            json.dump(episodes_tracker, f, indent=4)
-    except IOError as e:
-        logging.error(f"Error saving processed episodes to {PROCESSED_EPISODES_FILE}: {e}")
-
 def main():
+    database_manager.create_table() # Ensure database table exists
     check_interval_seconds = 3600  # Check every hour
 
     while True:
@@ -52,8 +36,6 @@ def main():
             time.sleep(check_interval_seconds)
             continue
 
-        processed_episodes_tracker = load_processed_episodes()
-
         for config in podcast_configs:
             podcast_name = config.get("name", "Unknown Podcast")
             rss_feed_url = config.get("rss_feed_url")
@@ -62,16 +44,12 @@ def main():
                 logging.warning(f"Skipping podcast {podcast_name}: No RSS feed URL provided.")
                 continue
 
-            # Initialize tracker for this podcast if it doesn't exist
-            if rss_feed_url not in processed_episodes_tracker:
-                processed_episodes_tracker[rss_feed_url] = []
-
             logging.info(f"\nChecking for new episodes for '{podcast_name}' from {rss_feed_url}...")
             episode_info = download_latest_podcast_episode(rss_feed_url)
 
             if episode_info:
                 episode_id = episode_info["episode_url"]
-                if episode_id not in processed_episodes_tracker[rss_feed_url]:
+                if not database_manager.episode_exists(episode_id):
                     if episode_info["is_new_download"]:
                         logging.info(f"New episode detected for '{podcast_name}': {episode_info['episode_title']}")
 
@@ -85,9 +63,18 @@ def main():
                                 text_body = summary
                                 html_body = f"<p>Here is the summary for <b>{episode_info['episode_title']}</b>:</p><p>{summary}</p>"
                                 if send_email(subject, text_body, html_body):
-                                    processed_episodes_tracker[rss_feed_url].append(episode_id)
-                                    save_processed_episodes(processed_episodes_tracker)
-                                    logging.info(f"Episode '{episode_info['episode_title']}' processed and added to tracker.")
+                                    episode_data = {
+                                        "podcast_url": rss_feed_url,
+                                        "episode_url": episode_id,
+                                        "title": episode_info["episode_title"],
+                                        "published_date": episode_info["published_date"],
+                                        "audio_filepath": audio_file_path,
+                                        "transcription_filepath": transcription_file_path,
+                                        "summary_filepath": os.path.splitext(transcription_file_path)[0] + ".summary.txt",
+                                        "summary_text": summary
+                                    }
+                                    database_manager.add_episode(episode_data)
+                                    logging.info(f"Episode '{episode_info['episode_title']}' processed and added to database.")
                                 else:
                                     logging.error(f"Failed to send email for episode: {episode_info['episode_title']}")
                             else:
@@ -97,7 +84,7 @@ def main():
                     else:
                         logging.info(f"Latest episode for '{podcast_name}' ({episode_info['episode_title']}) already exists locally.")
                 else:
-                    logging.info(f"Episode '{episode_info['episode_title']}' for '{podcast_name}' already processed.")
+                    logging.info(f"Episode '{episode_info['episode_title']}' for '{podcast_name}' already processed (found in DB).")
             else:
                 logging.warning(f"No episode information returned for '{podcast_name}' or an error occurred during download.")
 
@@ -106,4 +93,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
 

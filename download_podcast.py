@@ -91,9 +91,12 @@ def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts")
             logger.error(f"Error writing episode to file {file_path}: {e}")
             return None
 
+    published_date = getattr(latest_episode, 'published', None)
+
     return {
         "episode_title": episode_title,
         "episode_url": episode_url,
         "file_path": file_path,
-        "is_new_download": is_new_download
+        "is_new_download": is_new_download,
+        "published_date": published_date
     }
