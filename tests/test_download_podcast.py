@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch, mock_open, MagicMock
 import os
 import sys
+import logging
 
 # Add the parent directory to the sys.path to allow importing download_podcast
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -10,6 +11,14 @@ from download_podcast import download_latest_podcast_episode
 from transcribe_podcast import transcribe_audio
 
 class TestDownloadPodcast(unittest.TestCase):
+
+    def setUp(self):
+        # Disable logging during tests to prevent clutter
+        logging.disable(logging.CRITICAL)
+
+    def tearDown(self):
+        # Re-enable logging after tests
+        logging.disable(logging.NOTSET)
 
     @patch('download_podcast.feedparser.parse')
     @patch('download_podcast.requests.get')

@@ -2,6 +2,7 @@ import unittest
 from unittest.mock import patch, mock_open, MagicMock
 import os
 import sys
+import logging
 
 # Add the parent directory to the sys.path to allow importing transcribe_podcast
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -9,6 +10,14 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')
 from transcribe_podcast import transcribe_audio
 
 class TestTranscribePodcast(unittest.TestCase):
+
+    def setUp(self):
+        # Disable logging during tests to prevent clutter
+        logging.disable(logging.CRITICAL)
+
+    def tearDown(self):
+        # Re-enable logging after tests
+        logging.disable(logging.NOTSET)
 
     @patch('transcribe_podcast.whisper.load_model')
     @patch('builtins.open', new_callable=mock_open)
@@ -44,10 +53,10 @@ class TestTranscribePodcast(unittest.TestCase):
         mock_audio_path = "/path/to/mock_audio.mp3"
         mock_splitext.return_value = ("/path/to/mock_audio", ".mp3")
 
-        # Capture print output to check error message
-        with patch('builtins.print') as mock_print:
+        # Capture logging output to check error message
+        with patch('transcribe_podcast.logger.error') as mock_logger_error:
             result = transcribe_audio(mock_audio_path)
-            mock_print.assert_any_call(f"An error occurred during transcription: Whisper error")
+            mock_logger_error.assert_called_once_with(f"An error occurred during transcription: Whisper error")
 
         mock_open.assert_not_called() # No file should be written on error
         self.assertIsNone(result)

@@ -2,7 +2,10 @@ import unittest
 import os
 from unittest.mock import patch
 import sys
-import os
+import logging
+import requests
+
+# Add the parent directory to the sys.path to allow importing send_email
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from send_email import send_email
 
@@ -13,20 +16,23 @@ class TestSendEmail(unittest.TestCase):
         os.environ["AHASEND_API_KEY"] = "test_api_key"
         os.environ["SENDER_EMAIL"] = "test@example.com"
         os.environ["RECIPIENT_EMAIL"] = "recipient@example.com"
-        os.environ["SENDER_NAME"] = "Test Sender"
+        # Disable logging during tests to prevent clutter
+        logging.disable(logging.CRITICAL)
 
     def tearDown(self):
         # Clean up environment variables after testing
-        for var in ["AHASEND_API_KEY", "SENDER_EMAIL", "RECIPIENT_EMAIL", "SENDER_NAME"]:
+        for var in ["AHASEND_API_KEY", "SENDER_EMAIL", "RECIPIENT_EMAIL"]:
             if var in os.environ:
                 del os.environ[var]
+        # Re-enable logging after tests
+        logging.disable(logging.NOTSET)
 
     @patch('requests.post')
     def test_send_email_success(self, mock_post):
         mock_post.return_value.raise_for_status.return_value = None
         mock_post.return_value.json.return_value = {'success_count': 1}
 
-        send_email("Test Subject", "Test Text Body", "<p>Test HTML Body</p>")
+        result = send_email("Test Subject", "Test Text Body", "<p>Test HTML Body</p>")
 
         mock_post.assert_called_once_with(
             'https://api.ahasend.com/v1/email/send',
@@ -37,12 +43,19 @@ class TestSendEmail(unittest.TestCase):
             },
             headers={'X-Api-Key': 'test_api_key', 'Content-Type': 'application/json'}
         )
+        self.assertTrue(result)
 
     @patch('requests.post')
     def test_send_email_missing_env_vars(self, mock_post):
         del os.environ["AHASEND_API_KEY"]
-        send_email("Test Subject", "Test Text Body", "<p>Test HTML Body</p>")
+        result = send_email("Test Subject", "Test Text Body", "<p>Test HTML Body</p>")
         mock_post.assert_not_called()
+        self.assertFalse(result)
+
+    @patch('requests.post', side_effect=requests.exceptions.RequestException("Network error"))
+    def test_send_email_request_exception(self, mock_post):
+        result = send_email("Test Subject", "Test Text Body", "<p>Test HTML Body</p>")
+        self.assertFalse(result)
 
 if __name__ == '__main__':
     unittest.main()

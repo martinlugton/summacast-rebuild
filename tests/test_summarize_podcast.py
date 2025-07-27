@@ -3,6 +3,7 @@ from unittest.mock import patch, MagicMock
 import os
 import sys
 import subprocess
+import logging
 
 # Add the parent directory to the sys.path to allow importing summarize_podcast
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
@@ -16,6 +17,8 @@ class TestSummarizePodcast(unittest.TestCase):
         os.makedirs(self.test_dir, exist_ok=True)
         self.dummy_transcription_path = os.path.join(self.test_dir, "dummy_transcription.txt")
         self.expected_summary_path = os.path.join(self.test_dir, "dummy_transcription.summary.txt")
+        # Disable logging during tests to prevent clutter
+        logging.disable(logging.CRITICAL)
 
     def tearDown(self):
         if os.path.exists(self.dummy_transcription_path):
@@ -24,6 +27,8 @@ class TestSummarizePodcast(unittest.TestCase):
             os.remove(self.expected_summary_path)
         if os.path.exists(self.test_dir):
             os.rmdir(self.test_dir)
+        # Re-enable logging after tests
+        logging.disable(logging.NOTSET)
 
     @patch('subprocess.Popen')
     def test_summarize_text_success(self, mock_popen):
@@ -65,8 +70,13 @@ class TestSummarizePodcast(unittest.TestCase):
         with open(self.dummy_transcription_path, "w", encoding="utf-8") as f:
             f.write("This is a dummy transcription content.")
 
-        # Call the summarize_text function and expect it to return None due to error
-        summary = summarize_text(self.dummy_transcription_path)
+        # Capture logging output to check error message
+        with patch('summarize_podcast.logger.error') as mock_logger_error:
+            # Call the summarize_text function and expect it to return None due to error
+            summary = summarize_text(self.dummy_transcription_path)
+            mock_logger_error.assert_called_once_with(
+                f"Gemini CLI command failed with exit code 1.\nStdout: \nStderr: CLI Error Message"
+            )
 
         # Assertions
         self.assertIsNone(summary)

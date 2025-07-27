@@ -1,6 +1,10 @@
 import os
 import requests
 from dotenv import load_dotenv
+import logging
+
+# Configure logging for this module
+logger = logging.getLogger(__name__)
 
 load_dotenv()
 
@@ -11,8 +15,8 @@ def send_email(subject, text_body, html_body):
     sender_name = "Summacast" # Default sender name
 
     if not all([api_key, sender_email, recipient_email]):
-        print("Error: Missing environment variables. Please check your .env file.")
-        return
+        logger.error("Error: Missing environment variables. Please check your .env file.")
+        return False
 
     email = {
         'from': {
@@ -39,12 +43,14 @@ def send_email(subject, text_body, html_body):
     try:
         r = requests.post('https://api.ahasend.com/v1/email/send', json=email, headers=headers)
         r.raise_for_status()
-        print("Email sent successfully!")
-        print(r.json())
+        logger.info("Email sent successfully!")
+        logger.info(r.json())
+        return True
     except requests.exceptions.RequestException as e:
-        print(f"Error sending email: {e}")
+        logger.error(f"Error sending email: {e}")
         if e.response:
-            print(e.response.text)
+            logger.error(f"AhaSend API response: {e.response.text}")
+        return False
 
 
 if __name__ == '__main__':

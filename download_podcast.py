@@ -1,8 +1,10 @@
 import feedparser
 import requests
 import os
-import whisper
-from summarize_podcast import summarize_text
+import logging
+
+# Configure logging for this module
+logger = logging.getLogger(__name__)
 
 def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts"):
     """
@@ -12,12 +14,16 @@ def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts")
         rss_feed_url (str): The URL of the podcast's RSS feed.
         download_directory (str): The directory where the podcast episode will be saved.
     """
-    print(f"Parsing RSS feed from: {rss_feed_url}")
-    feed = feedparser.parse(rss_feed_url)
+    logger.info(f"Parsing RSS feed from: {rss_feed_url}")
+    try:
+        feed = feedparser.parse(rss_feed_url)
+    except Exception as e:
+        logger.error(f"Error parsing RSS feed {rss_feed_url}: {e}")
+        return None
 
     if not feed.entries:
-        print("No episodes found in the RSS feed.")
-        return
+        logger.warning("No episodes found in the RSS feed.")
+        return None
 
     # Get the latest episode (first entry in the feed)
     latest_episode = feed.entries[0]
@@ -31,16 +37,20 @@ def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts")
             break
 
     if not episode_url:
-        print(f"No audio enclosure found for episode: {episode_title}")
-        return
+        logger.warning(f"No audio enclosure found for episode: {episode_title}")
+        return None
 
-    print(f"Found latest episode: {episode_title}")
-    print(f"Download URL: {episode_url}")
+    logger.info(f"Found latest episode: {episode_title}")
+    logger.info(f"Download URL: {episode_url}")
 
     # Create the download directory if it doesn't exist
     if not os.path.exists(download_directory):
-        os.makedirs(download_directory)
-        print(f"Created directory: {download_directory}")
+        try:
+            os.makedirs(download_directory)
+            logger.info(f"Created directory: {download_directory}")
+        except OSError as e:
+            logger.error(f"Error creating directory {download_directory}: {e}")
+            return None
 
     # Construct the filename
     # Sanitize the title to create a valid filename
@@ -61,9 +71,9 @@ def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts")
 
     is_new_download = False
     if os.path.exists(file_path):
-        print(f"File already exists: {file_path}. Skipping download.")
+        logger.info(f"File already exists: {file_path}. Skipping download.")
     else:
-        print(f"Downloading '{episode_title}' to '{file_path}'...")
+        logger.info(f"Downloading '{episode_title}' to '{file_path}'...")
         try:
             response = requests.get(episode_url, stream=True)
             response.raise_for_status()  # Raise an exception for HTTP errors
@@ -71,12 +81,15 @@ def download_latest_podcast_episode(rss_feed_url, download_directory="podcasts")
             with open(file_path, 'wb') as f:
                 for chunk in response.iter_content(chunk_size=8192):
                     f.write(chunk)
-            print(f"Successfully downloaded: {file_path}")
+            logger.info(f"Successfully downloaded: {file_path}")
             is_new_download = True
 
         except requests.exceptions.RequestException as e:
-            print(f"Error downloading episode: {e}")
+            logger.error(f"Error downloading episode: {e}")
             return None # Indicate failure to download
+        except IOError as e:
+            logger.error(f"Error writing episode to file {file_path}: {e}")
+            return None
 
     return {
         "episode_title": episode_title,

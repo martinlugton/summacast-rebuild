@@ -1,5 +1,9 @@
 import os
 import subprocess
+import logging
+
+# Configure logging for this module
+logger = logging.getLogger(__name__)
 
 def summarize_text(text_filepath):
     """
@@ -27,7 +31,8 @@ def summarize_text(text_filepath):
 
         if process.returncode != 0:
             error_message = f"Gemini CLI command failed with exit code {process.returncode}.\nStdout: {stdout}\nStderr: {stderr}"
-            raise Exception(error_message)
+            logger.error(error_message)
+            return None
 
         # Extract only the summary part from the stdout
         # Split by lines and take the last non-empty line
@@ -41,11 +46,17 @@ def summarize_text(text_filepath):
         summary_filepath = os.path.splitext(text_filepath)[0] + ".summary.txt"
         with open(summary_filepath, "w", encoding="utf-8") as f:
             f.write(summary)
-        print(f"Summary saved to {summary_filepath}")
+        logger.info(f"Summary saved to {summary_filepath}")
         return summary
 
+    except FileNotFoundError:
+        logger.error(f"Text file not found: {text_filepath}")
+        return None
+    except subprocess.CalledProcessError as e:
+        logger.error(f"Gemini CLI command failed: {e}")
+        return None
     except Exception as e:
-        print(f"An error occurred during summarization: {e}")
+        logger.error(f"An error occurred during summarization: {e}")
         return None
 
 if __name__ == "__main__":
