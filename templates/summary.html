@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summary for {{ episode.title }}</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1 { color: #0056b3; }
+        h2 { color: #0056b3; margin-top: 20px; }
+        pre { background: #eee; padding: 15px; border-radius: 5px; white-space: pre-wrap; word-wrap: break-word; }
+        .back-link { display: block; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Summary for: {{ episode.title }}</h1>
+        <p><strong>Podcast URL:</strong> {{ episode.podcast_url }}</p>
+        <p><strong>Episode URL:</strong> <a href="{{ episode.episode_url }}">{{ episode.episode_url }}</a></p>
+        <p><strong>Published Date:</strong> {{ episode.published_date }}</p>
+        <p><strong>Audio File:</strong> {{ episode.audio_filepath }}</p>
+        <p><strong>Transcription File:</strong> {{ episode.transcription_filepath }}</p>
+        <p><strong>Summary File:</strong> {{ episode.summary_filepath }}</p>
+
+        <h2>Summary Text</h2>
+        <pre>{{ episode.summary_text }}</pre>
+
+        <a href="{{ url_for('index') }}" class="back-link">Back to All Episodes</a>
+    </div>
+</body>
+</html>

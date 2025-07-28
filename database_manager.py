@@ -114,6 +114,55 @@ def episode_exists(episode_url):
         finally:
             conn.close()
 
+def episode_exists(episode_url):
+    """
+    Checks if an episode with the given URL already exists in the database.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM episodes WHERE episode_url = ?", (episode_url,))
+            return cursor.fetchone() is not None
+        except sqlite3.Error as e:
+            logger.error(f"Error checking if episode exists for URL {episode_url}: {e}")
+            return False
+        finally:
+            conn.close()
+
+def get_all_episodes():
+    """
+    Retrieves all episode records from the database, ordered by published date descending.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM episodes ORDER BY published_date DESC")
+            return [dict(row) for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            logger.error(f"Error retrieving all episodes: {e}")
+            return []
+        finally:
+            conn.close()
+
+def get_episode_by_id(episode_id):
+    """
+    Retrieves an episode record by its ID.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM episodes WHERE id = ?", (episode_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except sqlite3.Error as e:
+            logger.error(f"Error retrieving episode by ID {episode_id}: {e}")
+            return None
+        finally:
+            conn.close()
+
 if __name__ == "__main__":
     # Example Usage
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

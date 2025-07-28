@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Summacast - Podcast Summaries</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background-color: #f4f4f4; color: #333; }
+        .container { max-width: 900px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        h1, h2 { color: #0056b3; }
+        .podcast-list, .episode-list { margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px; }
+        .podcast-item, .episode-item { background: #e9e9e9; padding: 10px; margin-bottom: 10px; border-radius: 5px; }
+        .podcast-item h3, .episode-item h3 { margin-top: 0; color: #333; }
+        a { color: #007bff; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .add-button { display: inline-block; background-color: #28a745; color: white; padding: 10px 15px; border-radius: 5px; text-decoration: none; margin-bottom: 20px; }
+        .add-button:hover { background-color: #218838; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Summacast - Podcast Summaries</h1>
+        <a href="{{ url_for('add_podcast') }}" class="add-button">Add New Podcast</a>
+
+        <h2>Configured Podcasts</h2>
+        <div class="podcast-list">
+            {% if podcast_configs %}
+                {% for podcast in podcast_configs %}
+                    <div class="podcast-item">
+                        <h3>{{ podcast.name }}</h3>
+                        <p>RSS Feed: {{ podcast.rss_feed_url }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No podcasts configured yet. Add one to get started!</p>
+            {% endif %}
+        </div>
+
+        <h2>Processed Episodes</h2>
+        <div class="episode-list">
+            {% if episodes %}
+                {% for episode in episodes %}
+                    <div class="episode-item">
+                        <h3><a href="{{ url_for('view_summary', episode_id=episode.id) }}">{{ episode.title }}</a></h3>
+                        <p>Podcast: {{ episode.podcast_url }}</p>
+                        <p>Published: {{ episode.published_date }}</p>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <p>No episodes processed yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>

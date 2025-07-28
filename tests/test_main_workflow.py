@@ -119,17 +119,13 @@ class TestMainWorkflow(unittest.TestCase):
 
     @patch('main_workflow.download_latest_podcast_episode')
     @patch('main_workflow.time.sleep')
-    @patch('main_workflow.os.path.exists')
-    def test_main_workflow_episode_already_processed(self, mock_exists, mock_sleep, mock_download_episode):
-        # Mock podcast_config.json content
-        mock_exists.side_effect = [True, True] # podcast_config.json, then for each episode
-
+    def test_main_workflow_episode_already_processed(self, mock_sleep, mock_download_episode):
         # Mock download_latest_podcast_episode to return an existing episode
         mock_download_episode.return_value = {
             "episode_title": "Existing Episode",
             "episode_url": "http://test.com/existing_episode.mp3",
             "file_path": "podcasts/existing_episode.mp3",
-            "is_new_download": False, # Important: it's not a new download
+            "is_new_download": False,
             "published_date": "2025-07-27T09:00:00"
         }
 
