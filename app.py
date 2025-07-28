@@ -35,13 +35,12 @@ def add_podcast():
     if request.method == 'POST':
         podcast_name = request.form['podcast_name']
         rss_feed_url = request.form['rss_feed_url']
-        summary_length = request.form['summary_length']
         
         podcast_configs = load_podcast_config()
         if not podcast_configs:
             podcast_configs = []
         
-        podcast_configs.append({"name": podcast_name, "rss_feed_url": rss_feed_url, "summary_length": summary_length})
+        podcast_configs.append({"name": podcast_name, "rss_feed_url": rss_feed_url})
         
         try:
             with open(PODCAST_CONFIG_FILE, 'w') as f:

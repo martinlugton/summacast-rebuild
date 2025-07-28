@@ -31,21 +31,19 @@ class TestSummarizePodcast(unittest.TestCase):
         logging.disable(logging.NOTSET)
 
     @patch('subprocess.Popen')
-    def test_summarize_text_success_medium_length(self, mock_popen):
+    def test_summarize_text_success(self, mock_popen):
         # Mock subprocess.Popen to simulate Gemini CLI output
         mock_process = MagicMock()
         mock_process.returncode = 0
-        mock_process.communicate.return_value = ("""Loaded cached credentials.
-This is a test summary.
-""", "")
+        mock_process.communicate.return_value = ("""Loaded cached credentials.\nThis is a test summary.\n""", "")
         mock_popen.return_value = mock_process
 
         # Create a dummy transcription file
         with open(self.dummy_transcription_path, "w", encoding="utf-8") as f:
             f.write("This is a dummy transcription content.")
 
-        # Call the summarize_text function with default (medium) length
-        summary = summarize_text(self.dummy_transcription_path, length="medium")
+        # Call the summarize_text function
+        summary = summarize_text(self.dummy_transcription_path)
 
         # Assertions
         self.assertIsNotNone(summary)
@@ -56,65 +54,8 @@ This is a test summary.
             saved_summary = f.read()
         self.assertEqual(saved_summary, "This is a test summary.")
 
-        # Verify subprocess.Popen was called correctly with medium prompt
-        expected_prompt_part = "Please summarize the following podcast transcript:"
-        full_prompt = f"{expected_prompt_part}\n\nThis is a dummy transcription content.\n\nSummary:"
-        mock_popen.assert_called_once()
-        mock_process.communicate.assert_called_once_with(input=full_prompt)
-
-    @patch('subprocess.Popen')
-    def test_summarize_text_success_short_length(self, mock_popen):
-        # Mock subprocess.Popen to simulate Gemini CLI output
-        mock_process = MagicMock()
-        mock_process.returncode = 0
-        mock_process.communicate.return_value = ("""Loaded cached credentials.
-This is a short test summary.
-""", "")
-        mock_popen.return_value = mock_process
-
-        # Create a dummy transcription file
-        with open(self.dummy_transcription_path, "w", encoding="utf-8") as f:
-            f.write("This is a dummy transcription content.")
-
-        # Call the summarize_text function with short length
-        summary = summarize_text(self.dummy_transcription_path, length="short")
-
-        # Assertions
-        self.assertIsNotNone(summary)
-        self.assertEqual(summary, "This is a short test summary.")
-        self.assertTrue(os.path.exists(self.expected_summary_path))
-
-        # Verify subprocess.Popen was called correctly with short prompt
-        expected_prompt_part = "Please summarize the following podcast transcript very concisely:"
-        full_prompt = f"{expected_prompt_part}\n\nThis is a dummy transcription content.\n\nSummary:"
-        mock_popen.assert_called_once()
-        mock_process.communicate.assert_called_once_with(input=full_prompt)
-
-    @patch('subprocess.Popen')
-    def test_summarize_text_success_long_length(self, mock_popen):
-        # Mock subprocess.Popen to simulate Gemini CLI output
-        mock_process = MagicMock()
-        mock_process.returncode = 0
-        mock_process.communicate.return_value = ("""Loaded cached credentials.
-This is a long test summary.
-""", "")
-        mock_popen.return_value = mock_process
-        
-
-        # Create a dummy transcription file
-        with open(self.dummy_transcription_path, "w", encoding="utf-8") as f:
-            f.write("This is a dummy transcription content.")
-
-        # Call the summarize_text function with long length
-        summary = summarize_text(self.dummy_transcription_path, length="long")
-
-        # Assertions
-        self.assertIsNotNone(summary)
-        self.assertEqual(summary, "This is a long test summary.")
-        self.assertTrue(os.path.exists(self.expected_summary_path))
-
-        # Verify subprocess.Popen was called correctly with long prompt
-        expected_prompt_part = "Please provide a detailed summary of the following podcast transcript:"
+        # Verify subprocess.Popen was called correctly with the prompt
+        expected_prompt_part = "Please summarize the following podcast transcript to approximately 10% of its original length:"
         full_prompt = f"{expected_prompt_part}\n\nThis is a dummy transcription content.\n\nSummary:"
         mock_popen.assert_called_once()
         mock_process.communicate.assert_called_once_with(input=full_prompt)
