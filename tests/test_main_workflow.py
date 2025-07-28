@@ -8,7 +8,7 @@ import logging
 # Add the parent directory to the sys.path to allow importing main_workflow
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main_workflow import process_podcasts, PODCAST_CONFIG_FILE
+from main_workflow import process_podcasts
 import database_manager
 
 DATABASE_NAME = "summacast.db" # Define the database name for cleanup
@@ -18,12 +18,11 @@ class TestMainWorkflow(unittest.TestCase):
     def setUp(self):
         # Disable logging during tests to prevent clutter
         logging.disable(logging.CRITICAL)
-        # Clean up any existing database file and podcast_config.json
+        # Clean up any existing database file
         if os.path.exists(DATABASE_NAME):
             os.remove(DATABASE_NAME)
-        if os.path.exists(PODCAST_CONFIG_FILE):
-            os.remove(PODCAST_CONFIG_FILE)
-        database_manager.create_table() # Ensure table is created for tests
+        database_manager.create_table()
+        database_manager.create_podcast_configs_table()
 
     def tearDown(self):
         # Re-enable logging after tests
@@ -31,21 +30,17 @@ class TestMainWorkflow(unittest.TestCase):
         # Clean up any created files and database
         if os.path.exists(DATABASE_NAME):
             os.remove(DATABASE_NAME)
-        if os.path.exists(PODCAST_CONFIG_FILE):
-            os.remove(PODCAST_CONFIG_FILE)
-import database_manager
-
 class TestMainWorkflow(unittest.TestCase):
 
     def setUp(self):
         # Disable logging during tests to prevent clutter
         logging.disable(logging.CRITICAL)
-        # Clean up any existing database file and podcast_config.json
+        # Clean up any existing database file
         if os.path.exists(database_manager.DATABASE_NAME):
             os.remove(database_manager.DATABASE_NAME)
-        if os.path.exists(PODCAST_CONFIG_FILE):
-            os.remove(PODCAST_CONFIG_FILE)
-        database_manager.create_table() # Ensure table is created for tests
+        database_manager.create_table()
+        database_manager.create_podcast_configs_table()
+        database_manager.create_podcast_configs_table()
 
     def tearDown(self):
         # Re-enable logging after tests
@@ -53,8 +48,6 @@ class TestMainWorkflow(unittest.TestCase):
         # Clean up any created files and database
         if os.path.exists(database_manager.DATABASE_NAME):
             os.remove(database_manager.DATABASE_NAME)
-        if os.path.exists(PODCAST_CONFIG_FILE):
-            os.remove(PODCAST_CONFIG_FILE)
 
     @patch('main_workflow.download_latest_podcast_episode')
     @patch('main_workflow.transcribe_audio')
@@ -87,7 +80,7 @@ class TestMainWorkflow(unittest.TestCase):
         mock_send_email.return_value = True # Email sent successfully
 
         # Run main for one iteration
-        with patch('main_workflow.load_podcast_config') as mock_load_config:
+        with patch('database_manager.get_all_podcast_configs') as mock_get_all_podcast_configs:
             with patch('database_manager.episode_exists') as mock_episode_exists:
                 with patch('database_manager.add_episode') as mock_add_episode:
                     with patch('main_workflow.time.sleep') as mock_sleep:
@@ -129,7 +122,7 @@ class TestMainWorkflow(unittest.TestCase):
             "published_date": "2025-07-27T09:00:00"
         }
 
-        with patch('main_workflow.load_podcast_config') as mock_load_config:
+        with patch('database_manager.get_all_podcast_configs') as mock_get_all_podcast_configs:
             with patch('database_manager.episode_exists') as mock_episode_exists:
                 with patch('database_manager.add_episode') as mock_add_episode:
                     with patch('main_workflow.time.sleep') as mock_sleep_inner:
@@ -179,7 +172,7 @@ class TestMainWorkflow(unittest.TestCase):
         mock_summarize_text.side_effect = ["Summary A", "Summary B"]
         mock_send_email.side_effect = [True, True]
 
-        with patch('main_workflow.load_podcast_config') as mock_load_config:
+        with patch('database_manager.get_all_podcast_configs') as mock_get_all_podcast_configs:
             with patch('database_manager.episode_exists') as mock_episode_exists:
                 with patch('database_manager.add_episode') as mock_add_episode:
                     with patch('main_workflow.time.sleep') as mock_sleep_inner:
