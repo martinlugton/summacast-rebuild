@@ -8,7 +8,7 @@ import logging
 # Add the parent directory to the sys.path to allow importing main_workflow
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
-from main_workflow import main, PODCAST_CONFIG_FILE
+from main_workflow import process_podcasts, PODCAST_CONFIG_FILE
 import database_manager
 
 DATABASE_NAME = "summacast.db" # Define the database name for cleanup
@@ -102,7 +102,7 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_sleep.side_effect = [KeyboardInterrupt]
 
                         try:
-                            main()
+                            process_podcasts()
                         except KeyboardInterrupt:
                             pass
 
@@ -143,7 +143,7 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_sleep_inner.side_effect = [KeyboardInterrupt]
 
                         try:
-                            main()
+                            process_podcasts()
                         except KeyboardInterrupt:
                             pass
 
@@ -195,7 +195,7 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_sleep_inner.side_effect = [KeyboardInterrupt]
 
                         try:
-                            main()
+                            process_podcasts()
                         except KeyboardInterrupt:
                             pass
 
