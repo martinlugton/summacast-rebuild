@@ -11,19 +11,7 @@ import database_manager
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-PODCAST_CONFIG_FILE = "podcast_config.json"
 
-def load_podcast_config():
-    if os.path.exists(PODCAST_CONFIG_FILE):
-        try:
-            with open(PODCAST_CONFIG_FILE, 'r') as f:
-                return json.load(f)
-        except json.JSONDecodeError:
-            logging.error(f"Could not decode {PODCAST_CONFIG_FILE}. Please check its format.")
-            return None
-    else:
-        logging.error(f"Podcast configuration file not found: {PODCAST_CONFIG_FILE}")
-        return None
 
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.triggers.interval import IntervalTrigger
@@ -31,7 +19,7 @@ import atexit
 
 def process_podcasts():
     database_manager.create_table() # Ensure database table exists
-    podcast_configs = load_podcast_config()
+    podcast_configs = database_manager.get_all_podcast_configs()
     if not podcast_configs:
         logging.error("No podcast configurations loaded. Skipping podcast processing.")
         return

@@ -43,6 +43,27 @@ def create_table():
             logger.error(f"Error creating table: {e}")
         finally:
             conn.close()
+    create_podcast_configs_table()
+
+def create_podcast_configs_table():
+    """Creates the podcast_configs table if it doesn't exist."""
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS podcast_configs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    rss_feed_url TEXT NOT NULL UNIQUE
+                )
+            """)
+            conn.commit()
+            logger.info("Table 'podcast_configs' checked/created successfully.")
+        except sqlite3.Error as e:
+            logger.error(f"Error creating podcast_configs table: {e}")
+        finally:
+            conn.close()
 
 def add_episode(episode_data):
     """
@@ -160,6 +181,112 @@ def get_episode_by_id(episode_id):
         except sqlite3.Error as e:
             logger.error(f"Error retrieving episode by ID {episode_id}: {e}")
             return None
+        finally:
+            conn.close()
+
+def episode_exists(episode_url):
+    """
+    Checks if an episode with the given URL already exists in the database.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT 1 FROM episodes WHERE episode_url = ?", (episode_url,))
+            return cursor.fetchone() is not None
+        except sqlite3.Error as e:
+            logger.error(f"Error checking if episode exists for URL {episode_url}: {e}")
+            return False
+        finally:
+            conn.close()
+
+def get_all_episodes():
+    """
+    Retrieves all episode records from the database, ordered by published date descending.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM episodes ORDER BY published_date DESC")
+            return [dict(row) for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            logger.error(f"Error retrieving all episodes: {e}")
+            return []
+        finally:
+            conn.close()
+
+def get_episode_by_id(episode_id):
+    """
+    Retrieves an episode record by its ID.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM episodes WHERE id = ?", (episode_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except sqlite3.Error as e:
+            logger.error(f"Error retrieving episode by ID {episode_id}: {e}")
+            return None
+        finally:
+            conn.close()
+
+def add_podcast_config(name, rss_feed_url):
+    """
+    Adds a new podcast configuration to the database.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("""
+                INSERT INTO podcast_configs (name, rss_feed_url) VALUES (?, ?)
+            """, (name, rss_feed_url))
+            conn.commit()
+            logger.info(f"Added podcast config: {name} - {rss_feed_url}")
+            return True
+        except sqlite3.IntegrityError:
+            logger.warning(f"Podcast config '{name}' (URL: {rss_feed_url}) already exists in database. Skipping.")
+            return False
+        except sqlite3.Error as e:
+            logger.error(f"Error adding podcast config: {e}")
+            return False
+        finally:
+            conn.close()
+
+def get_all_podcast_configs():
+    """
+    Retrieves all podcast configurations from the database.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM podcast_configs")
+            return [dict(row) for row in cursor.fetchall()]
+        except sqlite3.Error as e:
+            logger.error(f"Error retrieving all podcast configs: {e}")
+            return []
+        finally:
+            conn.close()
+
+def delete_podcast_config(rss_feed_url):
+    """
+    Deletes a podcast configuration from the database by its RSS feed URL.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM podcast_configs WHERE rss_feed_url = ?", (rss_feed_url,))
+            conn.commit()
+            logger.info(f"Deleted podcast config with RSS feed URL: {rss_feed_url}")
+            return True
+        except sqlite3.Error as e:
+            logger.error(f"Error deleting podcast config: {e}")
+            return False
         finally:
             conn.close()
 
