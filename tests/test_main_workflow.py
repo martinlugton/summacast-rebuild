@@ -108,7 +108,7 @@ class TestMainWorkflow(unittest.TestCase):
 
                         mock_download_episode.assert_called_once_with("http://test.com/rss")
                         mock_transcribe_audio.assert_called_once_with("podcasts/new_episode.mp3")
-                        mock_summarize_text.assert_called_once_with("transcription.txt")
+                        mock_summarize_text.assert_called_once_with("transcription.txt", length="medium")
                         mock_send_email.assert_called_once_with(
                             "Podcast Summary: New Episode",
                             "This is a summary.",
@@ -202,7 +202,7 @@ class TestMainWorkflow(unittest.TestCase):
                         # Assertions for Podcast A
                         mock_download_episode.assert_any_call("http://test.com/rssA")
                         mock_transcribe_audio.assert_any_call("podcasts/new_episodeA.mp3")
-                        mock_summarize_text.assert_any_call("transcriptionA.txt")
+                        mock_summarize_text.assert_any_call("transcriptionA.txt", length="medium")
                         mock_send_email.assert_any_call(
                             "Podcast Summary: New Episode A",
                             "Summary A",
@@ -223,7 +223,7 @@ class TestMainWorkflow(unittest.TestCase):
                         # Assertions for Podcast B
                         mock_download_episode.assert_any_call("http://test.com/rssB")
                         mock_transcribe_audio.assert_any_call("podcasts/new_episodeB.mp3")
-                        mock_summarize_text.assert_any_call("transcriptionB.txt")
+                        mock_summarize_text.assert_any_call("transcriptionB.txt", length="medium")
                         mock_send_email.assert_any_call(
                             "Podcast Summary: New Episode B",
                             "Summary B",

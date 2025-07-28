@@ -54,10 +54,11 @@ def process_podcasts():
                     logging.info(f"New episode detected for '{podcast_name}': {episode_info['episode_title']}")
 
                     audio_file_path = episode_info["file_path"]
+                    summary_length = config.get("summary_length", "medium") # Default to medium
                     transcription_file_path = transcribe_audio(audio_file_path)
 
                     if transcription_file_path:
-                        summary = summarize_text(transcription_file_path)
+                        summary = summarize_text(transcription_file_path, length=summary_length)
                         if summary:
                             subject = f"Podcast Summary: {episode_info['episode_title']}"
                             text_body = summary

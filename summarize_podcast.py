@@ -5,7 +5,7 @@ import logging
 # Configure logging for this module
 logger = logging.getLogger(__name__)
 
-def summarize_text(text_filepath):
+def summarize_text(text_filepath, length="medium"):
     """
     Summarizes the content of a given text file using the Gemini CLI.
 
@@ -20,7 +20,14 @@ def summarize_text(text_filepath):
             text_content = f.read()
 
         # Construct the full prompt to send to Gemini
-        full_prompt = f"Please summarize the following podcast transcript:\n\n{text_content}\n\nSummary:"
+        if length == "short":
+            prompt_instruction = "Please summarize the following podcast transcript very concisely:"
+        elif length == "long":
+            prompt_instruction = "Please provide a detailed summary of the following podcast transcript:"
+        else:
+            prompt_instruction = "Please summarize the following podcast transcript:"
+
+        full_prompt = f"{prompt_instruction}\n\n{text_content}\n\nSummary:"
 
         # Construct the Gemini CLI command to read from stdin
         command = ["cmd.exe", "/c", "gemini", "--model", "gemini-2.5-flash"]
