@@ -48,11 +48,21 @@ class TestApp(unittest.TestCase):
     def test_add_podcast_post(self, mock_get_all_episodes, mock_add_podcast_config, mock_get_all_podcast_configs):
         mock_add_podcast_config.return_value = True
         mock_get_all_episodes.return_value = []
-        mock_get_all_podcast_configs.return_value = [{'name': 'Test Podcast', 'rss_feed_url': 'http://test.com/rss'}]
+        
+        # First, mock the initial state of podcast_configs for the GET request to '/'
+        mock_get_all_podcast_configs.return_value = []
+
         response = self.client.post('/add_podcast', data={
             'podcast_name': 'Test Podcast',
             'rss_feed_url': 'http://test.com/rss'
-        }, follow_redirects=True)
+        })
+        self.assertEqual(response.status_code, 302) # Expect a redirect
+
+        # Now, mock the state of podcast_configs after the add operation for the redirected GET request
+        mock_get_all_podcast_configs.return_value = [{'id': 1, 'name': 'Test Podcast', 'rss_feed_url': 'http://test.com/rss'}]
+        
+        # Follow the redirect manually
+        response = self.client.get(response.location)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<h3>Test Podcast</h3>', response.data)
         mock_add_podcast_config.assert_called_once_with('Test Podcast', 'http://test.com/rss')
@@ -105,7 +115,7 @@ class TestApp(unittest.TestCase):
         # Prepare the updated episode for the second call to get_episode_by_id (after redirect)
         updated_mock_episode = mock_episode.copy()
         updated_mock_episode['summary_text'] = new_summary_text
-        mock_get_episode_by_id.side_effect = [mock_episode.copy(), updated_mock_episode, updated_mock_episode]
+        mock_get_episode_by_id.side_effect = [mock_episode.copy(), updated_mock_episode.copy()]
 
         response = self.client.post('/resummarize/1', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
@@ -127,6 +137,30 @@ class TestApp(unittest.TestCase):
         response = self.client.post('/resummarize/999')
         self.assertEqual(response.status_code, 404)
         self.assertIn(b'Episode not found', response.data)
+
+    @patch('database_manager.get_podcast_config_by_id')
+    @patch('database_manager.delete_podcast_config')
+    @patch('database_manager.get_all_podcast_configs')
+    @patch('database_manager.get_all_episodes')
+    def test_delete_podcast_post(self, mock_get_all_episodes, mock_get_all_podcast_configs, mock_delete_podcast_config, mock_get_podcast_config_by_id):
+        mock_podcast = {'id': 1, 'name': 'Test Podcast', 'rss_feed_url': 'http://test.com/rss'}
+        mock_get_podcast_config_by_id.return_value = mock_podcast
+        mock_delete_podcast_config.return_value = True
+        mock_get_all_podcast_configs.side_effect = [[], [{'id': 1, 'name': 'Test Podcast', 'rss_feed_url': 'http://test.com/rss'}]]
+        mock_get_all_episodes.return_value = []
+
+        response = self.client.post('/delete_podcast/1', follow_redirects=True)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b'No podcasts configured yet.', response.data)
+        mock_get_podcast_config_by_id.assert_called_once_with(1)
+        mock_delete_podcast_config.assert_called_once_with(1)
+
+    @patch('database_manager.get_podcast_config_by_id')
+    def test_delete_podcast_not_found(self, mock_get_podcast_config_by_id):
+        mock_get_podcast_config_by_id.return_value = None
+        response = self.client.post('/delete_podcast/999')
+        self.assertEqual(response.status_code, 404)
+        self.assertIn(b'Podcast not found', response.data)
 
 if __name__ == '__main__':
     unittest.main()

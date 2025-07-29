@@ -29,6 +29,9 @@
                     <div class="podcast-item">
                         <h3>{{ podcast.name }}</h3>
                         <p>RSS Feed: {{ podcast.rss_feed_url }}</p>
+                        <form action="{{ url_for('delete_podcast', podcast_id=podcast.id) }}" method="POST" style="margin-top: 10px;">
+                            <button type="submit" style="background-color: #dc3545; color: white; padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer;">Delete</button>
+                        </form>
                     </div>
                 {% endfor %}
             {% else %}

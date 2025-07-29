@@ -44,6 +44,20 @@ def view_summary(episode_id):
         return render_template('summary.html', episode=episode)
     return "Episode not found", 404
 
+@app.route('/delete_podcast/<int:podcast_id>', methods=['POST'])
+def delete_podcast(podcast_id):
+    podcast = database_manager.get_podcast_config_by_id(podcast_id)
+    if not podcast:
+        logging.error(f"Attempted to delete non-existent podcast with ID: {podcast_id}")
+        return "Podcast not found", 404
+
+    if database_manager.delete_podcast_config(podcast_id):
+        logging.info(f"Deleted podcast: {podcast['name']}")
+        return redirect(url_for('index'))
+    else:
+        logging.error(f"Failed to delete podcast: {podcast['name']}")
+        return "Error deleting podcast", 500
+
 @app.route('/resummarize/<int:episode_id>', methods=['POST'])
 def resummarize_episode(episode_id):
     episode = database_manager.get_episode_by_id(episode_id)

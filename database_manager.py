@@ -272,21 +272,38 @@ def get_all_podcast_configs():
         finally:
             conn.close()
 
-def delete_podcast_config(rss_feed_url):
+def delete_podcast_config(podcast_id):
     """
-    Deletes a podcast configuration from the database by its RSS feed URL.
+    Deletes a podcast configuration from the database by its ID.
     """
     conn = connect_db()
     if conn:
         try:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM podcast_configs WHERE rss_feed_url = ?", (rss_feed_url,))
+            cursor.execute("DELETE FROM podcast_configs WHERE id = ?", (podcast_id,))
             conn.commit()
-            logger.info(f"Deleted podcast config with RSS feed URL: {rss_feed_url}")
+            logger.info(f"Deleted podcast config with ID: {podcast_id}")
             return True
         except sqlite3.Error as e:
             logger.error(f"Error deleting podcast config: {e}")
             return False
+        finally:
+            conn.close()
+
+def get_podcast_config_by_id(podcast_id):
+    """
+    Retrieves a podcast configuration by its ID.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM podcast_configs WHERE id = ?", (podcast_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except sqlite3.Error as e:
+            logger.error(f"Error retrieving podcast config by ID {podcast_id}: {e}")
+            return None
         finally:
             conn.close()
 
