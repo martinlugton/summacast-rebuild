@@ -35,7 +35,7 @@ class TestSummarizePodcast(unittest.TestCase):
         # Mock subprocess.Popen to simulate Gemini CLI output
         mock_process = MagicMock()
         mock_process.returncode = 0
-        mock_process.communicate.return_value = ("""Loaded cached credentials.\nThis is a test summary.\n""", "")
+        mock_process.communicate.return_value = ("This is a test summary.", "")
         mock_popen.return_value = mock_process
 
         # Create a dummy transcription file
@@ -55,7 +55,7 @@ class TestSummarizePodcast(unittest.TestCase):
         self.assertEqual(saved_summary, "This is a test summary.")
 
         # Verify subprocess.Popen was called correctly with the prompt
-        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a highly detailed list. It should be between 300 and 750 words. For each point, give at least one concrete example immediately after it. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading 'key quote'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading 'potential limitations and divergent views'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\nThis is a dummy transcription content.\n\nSummary:"""
+        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a highly detailed list. It should be between 300 and 750 words. For each point, give at least one concrete example immediately after it. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading '<h3>Key Quote</h3>'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading '<h3>Potential Limitations and Divergent Views</h3>'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\nThis is a dummy transcription content.\n\nSummary:"""
         mock_popen.assert_called_once()
         mock_process.communicate.assert_called_once_with(input=full_prompt)
 

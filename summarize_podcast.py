@@ -20,10 +20,10 @@ def summarize_text(text_filepath):
             text_content = f.read()
 
         # Construct the full prompt to send to Gemini
-        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a highly detailed list. It should be between 300 and 750 words. For each point, give at least one concrete example immediately after it. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading 'key quote'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading 'potential limitations and divergent views'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\n{text_content}\n\nSummary:"""
+        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a highly detailed list. It should be between 300 and 750 words. For each point, give at least one concrete example immediately after it. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading '<h3>Key Quote</h3>'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading '<h3>Potential Limitations and Divergent Views</h3>'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\n{text_content}\n\nSummary:"""
 
         # Construct the Gemini CLI command to read from stdin
-        command = ["cmd.exe", "/c", "gemini", "--model", "gemini-2.5-flash"]
+        command = ["cmd.exe", "/c", "gemini", "--model", "gemini-1.5-flash"]
 
         # Execute the command, piping the full prompt to stdin
         process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
@@ -34,14 +34,7 @@ def summarize_text(text_filepath):
             logger.error(error_message)
             return None
 
-        # Extract only the summary part from the stdout
-        # Split by lines and take the last non-empty line
-        lines = stdout.strip().splitlines()
-        summary = ""
-        for line in reversed(lines):
-            if line.strip() and not line.strip().startswith("Loaded cached credentials."):
-                summary = line.strip()
-                break
+        summary = stdout.strip()
 
         summary_filepath = os.path.splitext(text_filepath)[0] + ".summary.txt"
         with open(summary_filepath, "w", encoding="utf-8") as f:
