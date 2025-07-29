@@ -32,23 +32,12 @@ The Summacast software is designed to run continuously in the background, checki
     RECIPIENT_EMAIL=your_recipient_email@example.com
     ```
     *Replace the placeholder values with your actual credentials.*
-4.  **Configure Podcast Sources (`podcast_config.json` file):**
-    Create a file named `podcast_config.json` in the root of your project (`C:\git\summacast-rebuild\podcast_config.json`) and add the RSS feed URLs of the podcasts you want to process:
-    ```json
-    [
-        {
-            "name": "NPR Up First",
-            "rss_feed_url": "https://www.npr.org/rss/podcast.php?id=510019",
-            "summary_length": "medium"
-        },
-        {
-            "name": "Example Podcast 2",
-            "rss_feed_url": "http://example.com/podcast2.xml",
-            "summary_length": "short"
-        }
-    ]
+4.  **Initialize the database:**
+    Run the main workflow script once to initialize the database.
+    ```bash
+    python main_workflow.py
     ```
-    *You can add as many podcast entries as you like, and specify `summary_length` as "short", "medium", or "long".*
+    You can stop the script after you see the message that the database has been initialized.
 
 **Running the Software:**
 
@@ -57,23 +46,6 @@ To start the continuous podcast processing workflow, open your command prompt or
 ```bash
 python main_workflow.py
 ```
-
-**What will happen:**
-
-*   The script will start running in the background, managed by APScheduler.
-*   It will periodically (default: every hour) check each podcast listed in `podcast_config.json` for new episodes.
-*   **Logging Output:** You will see informational messages printed to your console, indicating:
-    *   When it's checking for new episodes.
-    *   When a new episode is found.
-    *   When an episode is being downloaded, transcribed, summarized, and emailed.
-    *   Any errors or warnings encountered during the process.
-*   **File Creation:**
-    *   Downloaded audio files will be saved in the `podcasts/` directory.
-    *   Transcription files (`.txt`) and summary files (`.summary.txt`) will be created alongside the audio files.
-    *   A SQLite database file named `summacast.db` will be created in the project root to keep track of processed episodes.
-*   **Email Notifications:** When a new episode is fully processed, an email containing its summary will be sent to the `RECIPIENT_EMAIL` specified in your `.env` file.
-
-To stop the software, you can usually press `Ctrl+C` in the terminal where it's running.
 
 To run the web interface, open a separate command prompt or terminal in the project root and run:
 
@@ -89,6 +61,21 @@ python app.py
     *   View a list of configured podcasts.
     *   View a list of processed episodes and their summaries.
     *   Add new podcast RSS feeds with specified summary lengths.
+*   The `main_workflow.py` script will start running in the background, managed by APScheduler.
+*   It will periodically (default: every hour) check each podcast listed in the database for new episodes.
+*   **Logging Output:** You will see informational messages printed to your console, indicating:
+    *   When it's checking for new episodes.
+    *   When a new episode is found.
+    *   When an episode is being downloaded, transcribed, summarized, and emailed.
+    *   Any errors or warnings encountered during the process.
+*   **File Creation:**
+    *   Downloaded audio files will be saved in the `podcasts/` directory.
+    *   Transcription files (`.txt`) and summary files (`.summary.txt`) will be created alongside the audio files.
+    *   A SQLite database file named `summacast.db` will be created in the project root to keep track of processed episodes and podcast configurations.
+*   **Email Notifications:** When a new episode is fully processed, an email containing its summary will be sent to the `RECIPIENT_EMAIL` specified in your `.env` file.
+
+To stop the software, you can usually press `Ctrl+C` in the terminal where it's running.
+
 
 ---
 
@@ -101,7 +88,7 @@ The Summacast software is designed with a modular architecture, separating conce
 *   **`main_workflow.py` (Orchestrator & Scheduler):**
     *   This is the central control unit for the podcast processing.
     *   It uses `APScheduler` to periodically run the `process_podcasts` function.
-    *   It loads podcast configurations from `podcast_config.json`.
+    *   It loads podcast configurations from the database via `database_manager`.
     *   It iterates through each configured podcast and coordinates the entire process by calling functions from other modules: `download_podcast`, `transcribe_podcast`, `summarize_podcast`, and `send_email`.
     *   It uses `database_manager` to check if an episode has already been processed and to record new processed episodes.
     *   Handles overall logging for the workflow.
@@ -135,10 +122,11 @@ The Summacast software is designed with a modular architecture, separating conce
     *   Manages interactions with a local SQLite database (`summacast.db`).
     *   Provides functions to:
         *   Connect to the database.
-        *   Create the `episodes` table (if it doesn't exist).
-        *   Add new episode records (including podcast URL, episode URL, title, published date, file paths, and summary text).
+        *   Create the `episodes` and `podcasts` tables (if they don't exist).
+        *   Add new episode records.
         *   Check if an episode (by its URL) already exists in the database.
         *   Retrieve all episodes or a specific episode by ID for the web interface.
+        *   Add, retrieve, and delete podcast configurations.
 
 *   **`app.py` (Web Interface):**
     *   A Flask application that provides a simple web-based user interface.
@@ -146,11 +134,7 @@ The Summacast software is designed with a modular architecture, separating conce
         *   `/`: Displays a list of configured podcasts and processed episodes.
         *   `/add_podcast`: Provides a form to add new podcast RSS feeds and their desired summary lengths.
         *   `/summaries/<episode_id>`: Displays the detailed summary of a specific episode.
-    *   Interacts with `database_manager.py` to fetch and display data.
-    *   Manages saving new podcast configurations to `podcast_config.json`.
-
-*   **`podcast_config.json` (Configuration):**
-    *   A JSON file that stores a list of podcast entries, each containing a `name`, `rss_feed_url`, and `summary_length`. This allows easy management of multiple podcast sources without modifying code.
+    *   Interacts with `database_manager.py` to fetch and display data and to manage the list of podcasts.
 
 *   **`.env` (Credentials):**
     *   A plain text file (ignored by Git) that securely stores sensitive information like API keys and email addresses, keeping them out of the codebase.
