@@ -28,7 +28,7 @@ Build a product that transcribes and summarises podcasts.
 1. Start by installing a CLI-based podcast downloading tool, and testing that it works.
 2. Install the whisper transcription tool, and start transcribing podcast episodes.
 3. Start summarising the content of the podcasts and writing them to a file locally.
-4. Identify an email sending service that allows us to send via API, with a free tier for low usage volumes, or with a cheap paid offering (e.g. Amazon SES).
+4. [DONE] Identify an email sending service that allows us to send via API, with a free tier for low usage volumes, or with a cheap paid offering (e.g. Amazon SES).
 5. Create a unified workflow script that runs continuously, checking for and processing new podcast episodes (download, transcribe, summarize, email).
 6. Implement error handling and logging.
 7. [DONE] Add configuration for podcast sources (now stored in the database).
@@ -38,6 +38,6 @@ Build a product that transcribes and summarises podcasts.
     * Show a list of processed episodes and their summaries.
     * Allow users to add/remove podcast RSS feeds.
     * Allow users to view and re-summarize old episodes.
-10. Implement a scheduler for the workflow: Instead of an infinite `while True` loop, use a proper scheduling mechanism (e.g., APScheduler) to run the `main_workflow.py` periodically.
-11. Refine summary output: Allow for configurable summary lengths (e.g., short, medium, long) or different output formats (e.g., bullet points, paragraphs).
+10. [DONE] Implement a scheduler for the workflow: Instead of an infinite `while True` loop, use a proper scheduling mechanism (e.g., APScheduler) to run the `main_workflow.py` periodically.
+11. [REVERTED] Refine summary output: Allow for configurable summary lengths (e.g., short, medium, long) or different output formats (e.g., bullet points, paragraphs).
 12. Add user authentication (optional, for future): If the UI becomes more complex or multi-user, consider adding authentication.
