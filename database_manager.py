@@ -56,7 +56,8 @@ def create_podcast_configs_table():
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     name TEXT NOT NULL,
                     rss_feed_url TEXT NOT NULL UNIQUE,
-                    recipient_email TEXT
+                    recipient_email TEXT,
+                    summary_length TEXT DEFAULT 'medium'
                 )
             """)
             conn.commit()
