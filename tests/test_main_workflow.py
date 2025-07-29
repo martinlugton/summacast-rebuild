@@ -85,7 +85,7 @@ class TestMainWorkflow(unittest.TestCase):
                 with patch('database_manager.add_episode') as mock_add_episode:
                     with patch('main_workflow.time.sleep') as mock_sleep:
 
-                        mock_load_config.return_value = [
+                        mock_get_all_podcast_configs.return_value = [
                             {"name": "Test Podcast", "rss_feed_url": "http://test.com/rss"}
                         ]
                         mock_episode_exists.return_value = False # Episode does not exist in DB
@@ -127,7 +127,7 @@ class TestMainWorkflow(unittest.TestCase):
                 with patch('database_manager.add_episode') as mock_add_episode:
                     with patch('main_workflow.time.sleep') as mock_sleep_inner:
 
-                        mock_load_config.return_value = [
+                        mock_get_all_podcast_configs.return_value = [
                             {"name": "Test Podcast", "rss_feed_url": "http://test.com/rss"}
                         ]
                         mock_episode_exists.return_value = True # Episode already exists in DB
@@ -177,7 +177,7 @@ class TestMainWorkflow(unittest.TestCase):
                 with patch('database_manager.add_episode') as mock_add_episode:
                     with patch('main_workflow.time.sleep') as mock_sleep_inner:
 
-                        mock_load_config.return_value = [
+                        mock_get_all_podcast_configs.return_value = [
                             {"name": "Podcast A", "rss_feed_url": "http://test.com/rssA"},
                             {"name": "Podcast B", "rss_feed_url": "http://test.com/rssB"}
                         ]

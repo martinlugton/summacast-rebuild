@@ -42,15 +42,19 @@ class TestApp(unittest.TestCase):
         self.assertIn(b'No podcasts configured yet.', response.data)
         self.assertIn(b'No episodes processed yet.', response.data)
 
+    @patch('database_manager.get_all_podcast_configs')
     @patch('database_manager.add_podcast_config')
-    def test_add_podcast_post(self, mock_add_podcast_config):
+    @patch('database_manager.get_all_episodes')
+    def test_add_podcast_post(self, mock_get_all_episodes, mock_add_podcast_config, mock_get_all_podcast_configs):
         mock_add_podcast_config.return_value = True
+        mock_get_all_episodes.return_value = []
+        mock_get_all_podcast_configs.return_value = [{'name': 'Test Podcast', 'rss_feed_url': 'http://test.com/rss'}]
         response = self.client.post('/add_podcast', data={
             'podcast_name': 'Test Podcast',
             'rss_feed_url': 'http://test.com/rss'
         }, follow_redirects=True)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b'Test Podcast', response.data)
+        self.assertIn(b'<h3>Test Podcast</h3>', response.data)
         mock_add_podcast_config.assert_called_once_with('Test Podcast', 'http://test.com/rss')
 
     @patch('database_manager.get_episode_by_id')
@@ -88,9 +92,9 @@ class TestApp(unittest.TestCase):
             'summary_filepath': 'summaries/old_episode.summary.txt',
             'summary_text': 'This is an old summary.'
         }
-        mock_get_episode_by_id.return_value = mock_episode
         mock_transcribe_audio.return_value = 'transcriptions/old_episode.txt'
-        mock_summarize_text.return_value = 'This is a new summary.'
+        new_summary_text = 'This is a new summary.'
+        mock_summarize_text.return_value = new_summary_text
 
         # Mock database update
         mock_conn = MagicMock()
@@ -98,10 +102,20 @@ class TestApp(unittest.TestCase):
         mock_conn.cursor.return_value = mock_cursor
         mock_connect_db.return_value = mock_conn
 
+        # Prepare the updated episode for the second call to get_episode_by_id (after redirect)
+        updated_mock_episode = mock_episode.copy()
+        updated_mock_episode['summary_text'] = new_summary_text
+        mock_get_episode_by_id.side_effect = [mock_episode.copy(), updated_mock_episode, updated_mock_episode]
+
         response = self.client.post('/resummarize/1', follow_redirects=True)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'This is a new summary.', response.data)
-        mock_get_episode_by_id.assert_called_once_with(1)
+        
+        # Assert that get_episode_by_id was called twice (once by resummarize, once by index after redirect)
+        self.assertEqual(mock_get_episode_by_id.call_count, 2)
+        self.assertEqual(mock_get_episode_by_id.call_args_list[0].args[0], 1)
+        self.assertEqual(mock_get_episode_by_id.call_args_list[1].args[0], 1)
+
         mock_transcribe_audio.assert_called_once_with('podcasts/old_episode.mp3')
         mock_summarize_text.assert_called_once_with('transcriptions/old_episode.txt')
         mock_cursor.execute.assert_called_once()

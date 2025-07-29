@@ -20,7 +20,7 @@ def summarize_text(text_filepath):
             text_content = f.read()
 
         # Construct the full prompt to send to Gemini
-        full_prompt = f"Please summarize the following podcast transcript to approximately 10% of its original length:\n\n{text_content}\n\nSummary:"
+        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a highly detailed list. It should be between 300 and 750 words. For each point, give at least one concrete example immediately after it. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading 'key quote'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading 'potential limitations and divergent views'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\n{text_content}\n\nSummary:"""
 
         # Construct the Gemini CLI command to read from stdin
         command = ["cmd.exe", "/c", "gemini", "--model", "gemini-2.5-flash"]
