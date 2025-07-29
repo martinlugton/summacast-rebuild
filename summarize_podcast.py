@@ -19,11 +19,16 @@ def summarize_text(text_filepath):
         with open(text_filepath, 'r', encoding='utf-8') as f:
             text_content = f.read()
 
+        # Calculate 10% of the text content length for summary
+        # This is a simplified approach and might need adjustment based on actual content and desired summary quality.
+        # For more advanced summarization, consider using an LLM to determine summary length.
+        target_words = max(50, len(text_content.split()) // 10) # At least 50 words
+
         # Construct the full prompt to send to Gemini
-        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a highly detailed list. It should be between 300 and 750 words. For each point, give at least one concrete example immediately after it. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading '<h3>Key Quote</h3>'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading '<h3>Potential Limitations and Divergent Views</h3>'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\n{text_content}\n\nSummary:"""
+        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be approximately {target_words} words. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading '<h3>Key Quote</h3>'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading '<h3>Potential Limitations and Divergent Views</h3>'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\n{text_content}\n\nSummary:"""
 
         # Construct the Gemini CLI command to read from stdin
-        command = ["cmd.exe", "/c", "gemini", "--model", "gemini-1.5-pro"]
+        command = ["cmd.exe", "/c", "gemini", "--model", "gemini-1.5-flash"]
 
         # Execute the command, piping the full prompt to stdin
         process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, encoding='utf-8')
