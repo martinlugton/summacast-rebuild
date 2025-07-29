@@ -54,18 +54,20 @@ class TestApp(unittest.TestCase):
 
         response = self.client.post('/add_podcast', data={
             'podcast_name': 'Test Podcast',
-            'rss_feed_url': 'http://test.com/rss'
+            'rss_feed_url': 'http://test.com/rss',
+            'recipient_email': 'test@example.com'
         })
         self.assertEqual(response.status_code, 302) # Expect a redirect
 
         # Now, mock the state of podcast_configs after the add operation for the redirected GET request
-        mock_get_all_podcast_configs.return_value = [{'id': 1, 'name': 'Test Podcast', 'rss_feed_url': 'http://test.com/rss'}]
+        mock_get_all_podcast_configs.return_value = [{'id': 1, 'name': 'Test Podcast', 'rss_feed_url': 'http://test.com/rss', 'recipient_email': 'test@example.com'}]
         
         # Follow the redirect manually
         response = self.client.get(response.location)
         self.assertEqual(response.status_code, 200)
         self.assertIn(b'<h3>Test Podcast</h3>', response.data)
-        mock_add_podcast_config.assert_called_once_with('Test Podcast', 'http://test.com/rss')
+        self.assertIn(b'<p>Recipient Email: test@example.com</p>', response.data)
+        mock_add_podcast_config.assert_called_once_with('Test Podcast', 'http://test.com/rss', 'test@example.com')
 
     @patch('database_manager.get_episode_by_id')
     def test_view_summary_page(self, mock_get_episode_by_id):

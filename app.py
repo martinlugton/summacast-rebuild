@@ -28,8 +28,9 @@ def add_podcast():
     if request.method == 'POST':
         podcast_name = request.form['podcast_name']
         rss_feed_url = request.form['rss_feed_url']
+        recipient_email = request.form['recipient_email']
         
-        if database_manager.add_podcast_config(podcast_name, rss_feed_url):
+        if database_manager.add_podcast_config(podcast_name, rss_feed_url, recipient_email):
             logging.info(f"Added new podcast to config: {podcast_name} - {rss_feed_url}")
             return redirect(url_for('index'))
         else:

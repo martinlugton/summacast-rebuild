@@ -8,13 +8,15 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-def send_email(subject, text_body, html_body):
+def send_email(subject, text_body, html_body, recipient_email=None):
     api_key = os.getenv("AHASEND_API_KEY")
     sender_email = os.getenv("SENDER_EMAIL")
-    recipient_email = os.getenv("RECIPIENT_EMAIL")
+    default_recipient_email = os.getenv("RECIPIENT_EMAIL")
     sender_name = "Summacast" # Default sender name
 
-    if not all([api_key, sender_email, recipient_email]):
+    recipient = recipient_email if recipient_email else default_recipient_email
+
+    if not all([api_key, sender_email, default_recipient_email]):
         logger.error("Error: Missing environment variables. Please check your .env file.")
         return False
 
@@ -26,7 +28,7 @@ def send_email(subject, text_body, html_body):
         'recipients': [
             {
                 'name': 'Podcast Listener', # This could be customized later
-                'email': recipient_email,
+                'email': recipient,
             }
         ],
         'content': {

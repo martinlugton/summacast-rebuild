@@ -86,7 +86,7 @@ class TestMainWorkflow(unittest.TestCase):
                     with patch('main_workflow.time.sleep') as mock_sleep:
 
                         mock_get_all_podcast_configs.return_value = [
-                            {"name": "Test Podcast", "rss_feed_url": "http://test.com/rss"}
+                            {"name": "Test Podcast", "rss_feed_url": "http://test.com/rss", "recipient_email": "test@example.com"}
                         ]
                         mock_episode_exists.return_value = False # Episode does not exist in DB
                         mock_add_episode.return_value = True # Episode added successfully
@@ -105,7 +105,8 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_send_email.assert_called_once_with(
                             "Podcast Summary: New Episode",
                             "This is a summary.",
-                            "<p>Here is the summary for <b>New Episode</b>:</p><p>This is a summary.</p>"
+                            "<p>Here is the summary for <b>New Episode</b>:</p><p>This is a summary.</p>",
+                            "test@example.com"
                         )
                         mock_episode_exists.assert_called_once_with("http://test.com/new_episode.mp3")
                         mock_add_episode.assert_called_once()
@@ -128,7 +129,7 @@ class TestMainWorkflow(unittest.TestCase):
                     with patch('main_workflow.time.sleep') as mock_sleep_inner:
 
                         mock_get_all_podcast_configs.return_value = [
-                            {"name": "Test Podcast", "rss_feed_url": "http://test.com/rss"}
+                            {"name": "Test Podcast", "rss_feed_url": "http://test.com/rss", "recipient_email": "test@example.com"}
                         ]
                         mock_episode_exists.return_value = True # Episode already exists in DB
 
@@ -178,8 +179,8 @@ class TestMainWorkflow(unittest.TestCase):
                     with patch('main_workflow.time.sleep') as mock_sleep_inner:
 
                         mock_get_all_podcast_configs.return_value = [
-                            {"name": "Podcast A", "rss_feed_url": "http://test.com/rssA"},
-                            {"name": "Podcast B", "rss_feed_url": "http://test.com/rssB"}
+                            {"name": "Podcast A", "rss_feed_url": "http://test.com/rssA", "recipient_email": "a@test.com"},
+                            {"name": "Podcast B", "rss_feed_url": "http://test.com/rssB", "recipient_email": "b@test.com"}
                         ]
                         mock_episode_exists.side_effect = [False, False] # Both episodes do not exist in DB
                         mock_add_episode.side_effect = [True, True] # Both episodes added successfully
@@ -199,7 +200,8 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_send_email.assert_any_call(
                             "Podcast Summary: New Episode A",
                             "Summary A",
-                            "<p>Here is the summary for <b>New Episode A</b>:</p><p>Summary A</p>"
+                            "<p>Here is the summary for <b>New Episode A</b>:</p><p>Summary A</p>",
+                            "a@test.com"
                         )
                         mock_episode_exists.assert_any_call("http://test.com/new_episodeA.mp3")
                         mock_add_episode.assert_any_call({
@@ -220,7 +222,8 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_send_email.assert_any_call(
                             "Podcast Summary: New Episode B",
                             "Summary B",
-                            "<p>Here is the summary for <b>New Episode B</b>:</p><p>Summary B</p>"
+                            "<p>Here is the summary for <b>New Episode B</b>:</p><p>Summary B</p>",
+                            "b@test.com"
                         )
                         mock_episode_exists.assert_any_call("http://test.com/new_episodeB.mp3")
                         mock_add_episode.assert_any_call({

@@ -52,10 +52,23 @@ class TestSendEmail(unittest.TestCase):
         mock_post.assert_not_called()
         self.assertFalse(result)
 
-    @patch('requests.post', side_effect=requests.exceptions.RequestException("Network error"))
-    def test_send_email_request_exception(self, mock_post):
-        result = send_email("Test Subject", "Test Text Body", "<p>Test HTML Body</p>")
-        self.assertFalse(result)
+    @patch('requests.post')
+    def test_send_email_custom_recipient(self, mock_post):
+        mock_post.return_value.raise_for_status.return_value = None
+        mock_post.return_value.json.return_value = {'success_count': 1}
+
+        result = send_email("Test Subject", "Test Text Body", "<p>Test HTML Body</p>", recipient_email="custom@example.com")
+
+        mock_post.assert_called_once_with(
+            'https://api.ahasend.com/v1/email/send',
+            json={
+                'from': {'name': 'Summacast', 'email': 'test@example.com'},
+                'recipients': [{'name': 'Podcast Listener', 'email': 'custom@example.com'}],
+                'content': {'subject': 'Test Subject', 'text_body': 'Test Text Body', 'html_body': '<p>Test HTML Body</p>'},
+            },
+            headers={'X-Api-Key': 'test_api_key', 'Content-Type': 'application/json'}
+        )
+        self.assertTrue(result)
 
 if __name__ == '__main__':
     unittest.main()

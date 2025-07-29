@@ -55,8 +55,7 @@ class TestSummarizePodcast(unittest.TestCase):
         self.assertEqual(saved_summary, "This is a test summary.")
 
         # Verify subprocess.Popen was called correctly with the prompt
-        expected_prompt_part = "Please summarize the following podcast transcript to approximately 10% of its original length:"
-        full_prompt = f"{expected_prompt_part}\n\nThis is a dummy transcription content.\n\nSummary:"
+        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a highly detailed list. It should be between 300 and 750 words. For each point, give at least one concrete example immediately after it. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading 'key quote'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading 'potential limitations and divergent views'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\nThis is a dummy transcription content.\n\nSummary:"""
         mock_popen.assert_called_once()
         mock_process.communicate.assert_called_once_with(input=full_prompt)
 
