@@ -60,7 +60,7 @@ class TestSummarizePodcast(unittest.TestCase):
         expected_target_words = max(50, len(dummy_content.split()) // 10)
 
         full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be approximately {expected_target_words} words. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading '<h3>Key Quote</h3>'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading '<h3>Potential Limitations and Divergent Views</h3>'. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\nThis is a dummy transcription content.\n\nSummary:"""
-        mock_popen.assert_called_once_with(["cmd.exe", "/c", "gemini", "--model", "gemini-1.5-flash"], stdin=-1, stdout=-1, stderr=-1, text=True, encoding='utf-8')
+        mock_popen.assert_called_once_with(["cmd.exe", "/c", "gemini", "--model", "gemini-2.5-flash"], stdin=-1, stdout=-1, stderr=-1, text=True, encoding='utf-8')
         mock_process.communicate.assert_called_once_with(input=full_prompt)
 
     @patch('subprocess.Popen')
