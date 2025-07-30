@@ -37,7 +37,7 @@ Build a product that transcribes and summarises podcasts.
     * Display a list of configured podcasts.
     * Show a list of processed episodes and their summaries.
     * Allow users to add/remove podcast RSS feeds.
-    * Allow users to view and re-summarize old episodes.
+    * [IN PROGRESS] Allow users to view and re-summarize old episodes (currently problematic).
 10. [DONE] Implement a scheduler for the workflow: Instead of an infinite `while True` loop, use a proper scheduling mechanism (e.g., APScheduler) to run the `main_workflow.py` periodically.
 11. [REVERTED] Refine summary output: Allow for configurable summary lengths (e.g., short, medium, long) or different output formats (e.g., bullet points, paragraphs).
 12. Add user authentication (optional, for future): If the UI becomes more complex or multi-user, consider adding authentication.
