@@ -4,3 +4,4 @@ python-dotenv
 APScheduler
 Flask
 openai-whisper
+markdown

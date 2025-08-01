@@ -243,6 +243,40 @@ def get_podcast_config_by_id(podcast_id):
         finally:
             conn.close()
 
+def get_podcast_config_by_id(podcast_id):
+    """
+    Retrieves a podcast configuration by its ID.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM podcast_configs WHERE id = ?", (podcast_id,))
+            row = cursor.fetchone()
+            return dict(row) if row else None
+        except sqlite3.Error as e:
+            logger.error(f"Error retrieving podcast config by ID {podcast_id}: {e}")
+            return None
+        finally:
+            conn.close()
+
+def clear_all_data():
+    """
+    Clears all data from the episodes and podcast_configs tables.
+    """
+    conn = connect_db()
+    if conn:
+        try:
+            cursor = conn.cursor()
+            cursor.execute("DROP TABLE IF EXISTS episodes")
+            cursor.execute("DROP TABLE IF EXISTS podcast_configs")
+            conn.commit()
+            logger.info("All data cleared from episodes and podcast_configs tables.")
+        except sqlite3.Error as e:
+            logger.error(f"Error clearing all data: {e}")
+        finally:
+            conn.close()
+
 if __name__ == "__main__":
     # Example Usage
     logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')

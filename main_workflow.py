@@ -78,7 +78,7 @@ def process_podcasts():
 
 if __name__ == "__main__":
     scheduler = BackgroundScheduler()
-    scheduler.add_job(process_podcasts, IntervalTrigger(minutes=15)) # Run every 15 minutes
+    scheduler.add_job(process_podcasts, IntervalTrigger(minutes=5)) # Run every 5 minutes
     scheduler.start()
     logging.info("Scheduler started. Press Ctrl+C to exit.")
 
