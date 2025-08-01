@@ -10,8 +10,7 @@ The Summacast software is designed to run continuously in the background, checki
 
 1.  **Python 3.x:** Ensure you have Python installed on your Windows machine.
 2.  **Git:** (Already installed, as you're in a Git repository).
-3.  **Gemini CLI:** You need to have the Gemini CLI installed and configured with your Google Cloud credentials. The `summarize_podcast.py` script relies on this.
-4.  **Whisper:** The `transcribe_podcast.py` script uses the Whisper model. It will download the "medium" model the first time it runs.
+3.  **AhaSend Account:** You'll need an AhaSend account to send emails.
 
 **Setup Steps:**
 
@@ -23,7 +22,6 @@ The Summacast software is designed to run continuously in the background, checki
     ```bash
     pip install -r requirements.txt
     ```
-    *(Note: If `requirements.txt` doesn't exist, you'll need to manually install `feedparser`, `requests`, `python-dotenv`, `APScheduler`, `Flask`, and `whisper` using `pip install <package_name>`.)*
 3.  **Configure Environment Variables (`.env` file):**
     Create a file named `.env` in the root of your project (`C:\git\summacast-rebuild\.env`) and add your AhaSend API key and email addresses:
     ```
@@ -33,9 +31,9 @@ The Summacast software is designed to run continuously in the background, checki
     ```
     *Replace the placeholder values with your actual credentials.*
 4.  **Initialize the database:**
-    Run the main workflow script once to initialize the database.
+    Run the `app.py` script once to initialize the database.
     ```bash
-    python main_workflow.py
+    python app.py
     ```
     You can stop the script after you see the message that the database has been initialized.
 
@@ -60,9 +58,9 @@ python app.py
 *   The web interface allows you to:
     *   View a list of configured podcasts.
     *   View a list of processed episodes and their summaries.
-    *   Add new podcast RSS feeds with specified summary lengths.
+    *   Add new podcast RSS feeds.
 *   The `main_workflow.py` script will start running in the background, managed by APScheduler.
-*   It will periodically (default: every hour) check each podcast listed in the database for new episodes.
+*   It will periodically (default: every 15 minutes) check each podcast listed in the database for new episodes.
 *   **Logging Output:** You will see informational messages printed to your console, indicating:
     *   When it's checking for new episodes.
     *   When a new episode is found.
@@ -107,8 +105,8 @@ The Summacast software is designed with a modular architecture, separating conce
     *   Returns the path to the transcription file.
 
 *   **`summarize_podcast.py` (Summarizer):**
-    *   Takes a transcription text file path and a `length` parameter (short, medium, or long) as input.
-    *   Constructs a prompt based on the desired summary length.
+    *   Takes a transcription text file path as input.
+    *   Constructs a detailed prompt requesting a HTML list of key points with examples, a key quote, and a section on potential limitations and divergent views.
     *   Interacts with the Gemini CLI (via `subprocess`) to generate a summary of the text.
     *   Saves the generated summary to a `.summary.txt` file.
     *   Returns the summary text.
@@ -132,12 +130,15 @@ The Summacast software is designed with a modular architecture, separating conce
     *   A Flask application that provides a simple web-based user interface.
     *   Defines routes for:
         *   `/`: Displays a list of configured podcasts and processed episodes.
-        *   `/add_podcast`: Provides a form to add new podcast RSS feeds and their desired summary lengths.
+        *   `/add_podcast`: Provides a form to add new podcast RSS feeds.
         *   `/summaries/<episode_id>`: Displays the detailed summary of a specific episode.
     *   Interacts with `database_manager.py` to fetch and display data and to manage the list of podcasts.
 
 *   **`.env` (Credentials):**
     *   A plain text file (ignored by Git) that securely stores sensitive information like API keys and email addresses, keeping them out of the codebase.
+
+*   **`requirements.txt` (Dependencies):**
+    *   A text file listing all the Python packages required to run the project, allowing for easy installation with `pip install -r requirements.txt`.
 
 *   **`templates/` (Web Templates):**
     *   Contains HTML files (`index.html`, `add_podcast.html`, `summary.html`) that define the structure and content of the web interface.
