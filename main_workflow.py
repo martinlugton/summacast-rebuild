@@ -49,9 +49,8 @@ def process_podcasts():
                         if summary:
                             subject = f"Podcast Summary: {episode_info['episode_title']}"
                             text_body = summary
-                            html_body = f"<p>Here is the summary for <b>{episode_info['episode_title']}</b>:</p><p>{summary}</p>"
                             recipient_email = config.get("recipient_email")
-                            if send_email(subject, text_body, html_body, recipient_email):
+                            if send_email(subject, text_body, summary, podcast_name, episode_info['episode_title'], episode_info['published_date'], recipient_email):
                                 episode_data = {
                                     "podcast_url": rss_feed_url,
                                     "episode_url": episode_id,

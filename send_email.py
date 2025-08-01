@@ -8,7 +8,9 @@ logger = logging.getLogger(__name__)
 
 load_dotenv()
 
-def send_email(subject, text_body, html_body, recipient_email=None):
+from flask import render_template
+
+def send_email(subject, text_body, summary_content, podcast_name, episode_title, published_date, recipient_email=None):
     api_key = os.getenv("AHASEND_API_KEY")
     sender_email = os.getenv("SENDER_EMAIL")
     default_recipient_email = os.getenv("RECIPIENT_EMAIL")
@@ -19,6 +21,15 @@ def send_email(subject, text_body, html_body, recipient_email=None):
     if not all([api_key, sender_email, default_recipient_email]):
         logger.error("Error: Missing environment variables. Please check your .env file.")
         return False
+
+    # Render the HTML email template
+    html_body = render_template(
+        'email_summary_template.html',
+        podcast_name=podcast_name,
+        episode_title=episode_title,
+        published_date=published_date,
+        summary_content=summary_content
+    )
 
     email = {
         'from': {
