@@ -229,3 +229,48 @@ class TestMainWorkflow(unittest.TestCase):
                         })
 
                         self.assertEqual(mock_add_episode.call_count, 2)
+
+    @patch('main_workflow.download_latest_podcast_episode')
+    @patch('main_workflow.transcribe_audio')
+    @patch('main_workflow.summarize_text')
+    @patch('main_workflow.send_email')
+    @patch('main_workflow.time.sleep')
+    def test_summary_prefix_stripping(self, mock_sleep, mock_send_email, mock_summarize_text, mock_transcribe_audio, mock_download_episode):
+        # Mock download_latest_podcast_episode to return a new episode
+        mock_download_episode.return_value = {
+            "episode_title": "New Episode",
+            "episode_url": "http://test.com/new_episode.mp3",
+            "file_path": "podcasts/new_episode.mp3",
+            "is_new_download": True,
+            "published_date": "2025-07-27T12:00:00"
+        }
+        mock_transcribe_audio.return_value = "transcription.txt"
+        mock_summarize_text.return_value = "Summary: This is the actual summary content."
+        mock_send_email.return_value = True
+
+        with patch('database_manager.get_all_podcast_configs') as mock_get_all_podcast_configs:
+            with patch('database_manager.episode_exists') as mock_episode_exists:
+                with patch('database_manager.add_episode') as mock_add_episode:
+                    with patch('main_workflow.time.sleep') as mock_sleep_inner:
+                        mock_get_all_podcast_configs.return_value = [
+                            {"name": "Test Podcast", "rss_feed_url": "http://test.com/rss", "recipient_email": "test@example.com"}
+                        ]
+                        mock_episode_exists.return_value = False
+                        mock_add_episode.return_value = True
+                        mock_sleep_inner.side_effect = [KeyboardInterrupt]
+
+                        try:
+                            process_podcasts()
+                        except KeyboardInterrupt:
+                            pass
+
+                        # Check that the summary was stripped before sending
+                        mock_send_email.assert_called_once_with(
+                            "Summacast: Test Podcast - New Episode",
+                            "This is the actual summary content.",
+                            "This is the actual summary content.",
+                            "Test Podcast",
+                            "New Episode",
+                            "2025-07-27T12:00:00",
+                            "test@example.com"
+                        )

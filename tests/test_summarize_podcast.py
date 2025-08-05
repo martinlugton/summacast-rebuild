@@ -55,7 +55,11 @@ class TestSummarizePodcast(unittest.TestCase):
         self.assertEqual(saved_summary, "This is a test summary.")
 
         # Verify subprocess.Popen was called correctly with the prompt
-        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a detailed list, with each point illustrated by at least one concrete example. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading 'Key Quote:'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading 'Potential Limitations and Divergent Views:'. This section should be a bulleted list. Limit this section to a maximum of 250 words, and a maximum of 4 points.\n\nThis is a dummy transcription content.\n\nSummary:"""
+        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a detailed list, with each point illustrated by at least one concrete example. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading '## Key Quote'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading '## Potential Limitations and Divergent Views'. This section should be a bulleted list. Limit this section to a maximum of 250 words, and a maximum of 4 points.
+
+This is a dummy transcription content.
+
+Summary:"""
         mock_popen.assert_called_once_with(["cmd.exe", "/c", "gemini", "--model", "gemini-2.5-flash"], stdin=-1, stdout=-1, stderr=-1, text=True, encoding='utf-8')
         mock_process.communicate.assert_called_once_with(input=full_prompt)
 

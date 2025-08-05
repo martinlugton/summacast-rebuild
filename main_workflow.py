@@ -47,6 +47,8 @@ def process_podcasts():
                     if transcription_file_path:
                         summary = summarize_text(transcription_file_path)
                         if summary:
+                            if summary.lower().startswith('summary:'):
+                                summary = summary[len('summary:'):].lstrip()
                             subject = f"Summacast: {podcast_name} - {episode_info['episode_title']}"
                             text_body = summary
                             recipient_email = config.get("recipient_email")

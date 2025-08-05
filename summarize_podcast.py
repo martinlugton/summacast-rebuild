@@ -25,7 +25,7 @@ def summarize_text(text_filepath):
         target_words = max(50, len(text_content.split()) // 10) # At least 50 words
 
         # Construct the full prompt to send to Gemini
-        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a detailed list, with each point illustrated by at least one concrete example. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading 'Key Quote:'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading 'Potential Limitations and Divergent Views:'. This section should be a bulleted list. Limit this section to a maximum of 250 words, and a maximum of 4 points.
+        full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a detailed list, with each point illustrated by at least one concrete example. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading '## Key Quote'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading '## Potential Limitations and Divergent Views'. This section should be a bulleted list. Limit this section to a maximum of 250 words, and a maximum of 4 points.
 
 {text_content}
 
