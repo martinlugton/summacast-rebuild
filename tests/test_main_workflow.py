@@ -30,24 +30,6 @@ class TestMainWorkflow(unittest.TestCase):
         # Clean up any created files and database
         if os.path.exists(DATABASE_NAME):
             os.remove(DATABASE_NAME)
-class TestMainWorkflow(unittest.TestCase):
-
-    def setUp(self):
-        # Disable logging during tests to prevent clutter
-        logging.disable(logging.CRITICAL)
-        # Clean up any existing database file
-        if os.path.exists(database_manager.DATABASE_NAME):
-            os.remove(database_manager.DATABASE_NAME)
-        database_manager.create_table()
-        database_manager.create_podcast_configs_table()
-        database_manager.create_podcast_configs_table()
-
-    def tearDown(self):
-        # Re-enable logging after tests
-        logging.disable(logging.NOTSET)
-        # Clean up any created files and database
-        if os.path.exists(database_manager.DATABASE_NAME):
-            os.remove(database_manager.DATABASE_NAME)
 
     @patch('main_workflow.download_latest_podcast_episode')
     @patch('main_workflow.transcribe_audio')
@@ -103,9 +85,12 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_transcribe_audio.assert_called_once_with("podcasts/new_episode.mp3")
                         mock_summarize_text.assert_called_once_with("transcription.txt")
                         mock_send_email.assert_called_once_with(
-                            "Podcast Summary: New Episode",
+                            "Summacast: Test Podcast - New Episode",
                             "This is a summary.",
-                            "<p>Here is the summary for <b>New Episode</b>:</p><p>This is a summary.</p>",
+                            "This is a summary.",
+                            "Test Podcast",
+                            "New Episode",
+                            "2025-07-27T12:00:00",
                             "test@example.com"
                         )
                         mock_episode_exists.assert_called_once_with("http://test.com/new_episode.mp3")
@@ -198,9 +183,12 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_transcribe_audio.assert_any_call("podcasts/new_episodeA.mp3")
                         mock_summarize_text.assert_any_call("transcriptionA.txt")
                         mock_send_email.assert_any_call(
-                            "Podcast Summary: New Episode A",
+                            "Summacast: Podcast A - New Episode A",
                             "Summary A",
-                            "<p>Here is the summary for <b>New Episode A</b>:</p><p>Summary A</p>",
+                            "Summary A",
+                            "Podcast A",
+                            "New Episode A",
+                            "2025-07-27T10:00:00",
                             "a@test.com"
                         )
                         mock_episode_exists.assert_any_call("http://test.com/new_episodeA.mp3")
@@ -220,9 +208,12 @@ class TestMainWorkflow(unittest.TestCase):
                         mock_transcribe_audio.assert_any_call("podcasts/new_episodeB.mp3")
                         mock_summarize_text.assert_any_call("transcriptionB.txt")
                         mock_send_email.assert_any_call(
-                            "Podcast Summary: New Episode B",
+                            "Summacast: Podcast B - New Episode B",
                             "Summary B",
-                            "<p>Here is the summary for <b>New Episode B</b>:</p><p>Summary B</p>",
+                            "Summary B",
+                            "Podcast B",
+                            "New Episode B",
+                            "2025-07-27T11:00:00",
                             "b@test.com"
                         )
                         mock_episode_exists.assert_any_call("http://test.com/new_episodeB.mp3")

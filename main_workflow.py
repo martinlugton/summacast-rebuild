@@ -47,7 +47,7 @@ def process_podcasts():
                     if transcription_file_path:
                         summary = summarize_text(transcription_file_path)
                         if summary:
-                            subject = f"Podcast Summary: {episode_info['episode_title']}"
+                            subject = f"Summacast: {podcast_name} - {episode_info['episode_title']}"
                             text_body = summary
                             recipient_email = config.get("recipient_email")
                             if send_email(subject, text_body, summary, podcast_name, episode_info['episode_title'], episode_info['published_date'], recipient_email):
