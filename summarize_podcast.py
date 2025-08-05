@@ -28,8 +28,7 @@ def summarize_text(text_filepath):
         full_prompt = f"""Produce a summary of the key points in this podcast transcript. The summary should be a detailed list, with each point illustrated by at least one concrete example. Ignore episode credits and advertising in this summary. Once you have done this, please then highlight a key quote from the episode, under the heading '## Key Quote'. Once you have done that, please list some limitations of the arguments made in the transcript, and potential divergent viewpoints, under the heading '## Potential Limitations and Divergent Views'. This section should be a bulleted list. Limit this section to a maximum of 250 words, and a maximum of 4 points.
 
 {text_content}
-
-Summary:"""
+"""
 
         # Construct the Gemini CLI command to read from stdin
         command = ["cmd.exe", "/c", "gemini", "--model", "gemini-2.5-flash"]
@@ -47,6 +46,11 @@ Summary:"""
         summary = stdout.strip()
         if summary.startswith("Loaded cached credentials."):
             summary = summary.replace("Loaded cached credentials.", "", 1).strip()
+
+        # Remove the specific repetitive phrase if present
+        repetitive_phrase = "Here's a summary of the podcast transcript:"
+        if summary.startswith(repetitive_phrase):
+            summary = summary.replace(repetitive_phrase, "", 1).strip()
 
         summary_filepath = os.path.splitext(text_filepath)[0] + ".summary.txt"
         with open(summary_filepath, "w", encoding="utf-8") as f:
